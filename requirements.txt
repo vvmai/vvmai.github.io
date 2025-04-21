@@ -9,6 +9,5 @@ contextily
 plotly
 scikit-learn
 h3pandas
-h3==3.7.7
 census
 networkx

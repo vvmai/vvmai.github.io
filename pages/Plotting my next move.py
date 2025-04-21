@@ -60,7 +60,7 @@ def split_linestring(linestring, points):
 
 @st.cache_data
 def get_nyc_geo():
-    return gpd.read_file("https://data.cityofnewyork.us/api/geospatial/tqmj-j8zm?method=export&format=Shapefile")
+    return gpd.read_file("https://data.cityofnewyork.us/resource/gthc-hcne.geojson")
 
 @st.cache_data
 def get_ridership():
