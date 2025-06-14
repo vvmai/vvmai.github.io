@@ -1,9 +1,8 @@
 import streamlit as st
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-from scipy.optimize import fsolve, minimize, brentq, root_scalar
 from shapely.geometry import LineString
+
 st.set_page_config(layout="wide")
 st.title("Short answer: maybe.")
 st.markdown("""Long answer: to model the opportunity cost of attending grad school,

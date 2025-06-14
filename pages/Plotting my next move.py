@@ -4,13 +4,9 @@ import pandas as pd
 import plotly.graph_objects as go
 import geopandas as gpd
 import contextily as cx
-from shapely.geometry import Polygon
 import plotly.express as px
 from shapely.wkt import loads
 import networkx as nx
-import itertools as it
-import numpy as np
-from sklearn.preprocessing import RobustScaler
 import streamlit as st
 import h3
 import h3pandas
@@ -18,18 +14,13 @@ import pandas as pd
 import plotly.graph_objects as go
 import geopandas as gpd
 import contextily as cx
-from shapely.geometry import Polygon, LineString, Point, MultiLineString, MultiPoint
+from shapely.geometry import LineString
 import plotly.express as px
 from shapely.wkt import loads
 import networkx as nx
-import itertools as it
-import numpy as np
 import shapely
 from pyproj import Geod
-from shapely import ops, geometry
-import re
-import matplotlib.pyplot as plt
-import matplotlib
+
 config = {'scrollZoom': True}
 
 st.set_page_config(layout="wide")
