@@ -8,11 +8,11 @@ with col1:
              width=300
     )
 with col2:
-    st.title("Hi -- I'm Vuong.")
+    st.title("Hi -- I'm Vu0ng.")
     st.markdown("I'm a prolific producer of abandoned projects. This is my attempt to commit to at least some of them. Each page you see is a win against procrastination! :blossom:")
     st.subheader("What I do and why I do")
     st.markdown("""
-        Whenever I am faced with a big life decision or question, I gravitate
+        Whenever I am faced with a big life decision or dilemma, I gravitate
         towards formulating it as a mathematical model. To me, the joy of doing this is not that it gives exact answers to
         life's problems (nor can it), but that it transforms them into something solvable.
         

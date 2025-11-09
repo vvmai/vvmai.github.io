@@ -2,8 +2,9 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 from shapely.geometry import LineString
+from utils import configure_page
 
-st.set_page_config(layout="wide")
+configure_page(layout="wide", title="Is Grad School Worth It?")
 st.title("Short answer: maybe.")
 st.markdown("""Long answer: to model the opportunity cost of attending grad school,
             I use the following analysis...""")
@@ -111,45 +112,51 @@ def C(x, current_income, income_growth, grad_school_income, grad_income_growth, 
 
     return y
 
-plt.title("Wealth over time")
-plt.legend()
-plt.xlabel("Years")
-plt.ylabel("Income cumulative sum (in $100k)")
-plt.grid()
-st.pyplot(plt.gcf())
+col1, col2, col3 = st.columns([0.2, .6, 0.2])
+with col2:
+    plt.title("Wealth over time")
+    plt.legend()
+    plt.xlabel("Years")
+    plt.ylabel("Income cumulative sum (in $100k)")
+    plt.grid()
+    st.pyplot(plt.gcf())
 
 
-A_line = LineString(np.column_stack((x_range, np.array(a).cumsum()/100)))
-B_line = LineString(np.column_stack((x_range, np.array(b).cumsum()/100)))
+    A_line = LineString(np.column_stack((x_range, np.array(a).cumsum()/100)))
+    B_line = LineString(np.column_stack((x_range, np.array(b).cumsum()/100)))
 
-intersection = B_line.intersection(A_line)
+    intersection = B_line.intersection(A_line)
 
-if intersection.is_empty:
-    intersection = None
-elif intersection.geom_type == 'MultiPoint':
-    intersection = round(intersection.geoms[0].x, 1)
-elif intersection.geom_type == 'Point':
-    intersection = round(intersection.x, 1)
+    if intersection.is_empty:
+        intersection = None
+    elif intersection.geom_type == 'MultiPoint':
+        intersection = round(intersection.geoms[0].x, 1)
+    elif intersection.geom_type == 'Point':
+        intersection = round(intersection.x, 1)
 
 st.markdown("The roots of A - B (opportunity cost) gives us the breakeven point (if it exists):")
+
 c = C(x_range, current_income, income_growth, grad_school_income, grad_income_growth, post_grad_income, post_grad_income_growth, years_of_school)
-plt.figure()
-plt.plot(x_range, c, c='green', label='A - B')
 
-if intersection:
-    plt.axvline(x=intersection, color='k', linestyle='--', label=f"Breakeven = {intersection} years")
+col1, col2, col3 = st.columns([0.2, .6, 0.2])
+with col2:
+    plt.figure()
+    plt.plot(x_range, c, c='green', label='A - B')
 
-plt.grid()
-plt.title("Opportunity cost over time")
-plt.legend()
-plt.xlabel("Years")
-plt.ylabel("Opportunity cost (in $100k)")
-st.pyplot(plt.gcf())
+    if intersection:
+        plt.axvline(x=intersection, color='k', linestyle='--', label=f"Breakeven = {intersection} years")
 
-if intersection:
-    st.markdown(f"Congratulations! Going to grad school will net positive in {intersection} years!")
-else:
-    st.markdown(f"No breakeven found... you'll never financially recover from this (try increasing the time horizon).")
+    plt.grid()
+    plt.title("Opportunity cost over time")
+    plt.legend()
+    plt.xlabel("Years")
+    plt.ylabel("Opportunity cost (in $100k)")
+    st.pyplot(plt.gcf())
+
+    if intersection:
+        st.markdown(f"Congratulations! Going to grad school will net positive in {intersection} years!")
+    else:
+        st.markdown(f"No breakeven found... you'll never financially recover from this (try increasing the time horizon).")
 
 
 st.markdown("""Obviously, this toy model doesn't capture the risks involved in each scenario, which can be great, depending on your situation.

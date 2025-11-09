@@ -5,9 +5,10 @@ shapely
 scikit-learn
 numpy
 matplotlib
-contextily 
+contextily
 plotly
-scikit-learn
 h3pandas
 census
 networkx
+scipy
+pyproj

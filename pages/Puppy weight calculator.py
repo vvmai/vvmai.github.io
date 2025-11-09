@@ -3,7 +3,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import curve_fit
-st.set_page_config(layout="wide")
+from utils import configure_page
+
+configure_page(layout="wide", title="Puppy Weight Calculator")
 st.title("Estimating mixed puppies' adult weight")
 
 col1, col2, col3= st.columns([0.85, 1, 1])
@@ -78,16 +80,19 @@ popt, pcov = curve_fit(sigmoid, x, y,p0, method='dogbox')
 x_pred = np.linspace(0, max_age_range)
 y_pred = sigmoid(x_pred, *popt)
 
-adult_weight = popt[0] + popt[-1] # lim(x->inf) = L + b
+adult_weight = popt[0] + popt[-1] # lim(x->inf) = L + b 
+# set container, centered plot
+col1, col2, col3 = st.columns([0.2, .6, 0.2])
+with col2:
+    plt.scatter(user_df['age (wks)'], user_df['weight (lbs)'], label='data', alpha=0.8, s=10)
+    plt.plot(x_pred, y_pred, c='red', label='pred')
+    plt.axhline(y=adult_weight, color='k', linestyle='--', label=f'Adult weight = {round(adult_weight, 1)} lbs')
 
-plt.scatter(user_df['age (wks)'], user_df['weight (lbs)'], label='data', alpha=0.8, s=10)
-plt.plot(x_pred, y_pred, c='red', label='pred')
-plt.axhline(y=adult_weight, color='k', linestyle='--', label=f'Adult weight = {round(adult_weight, 1)} lbs')
+    plt.xlabel("Age (weeks)")
+    plt.ylabel("Weight (lbs)")
+    plt.title("Age vs. weight")
+    plt.grid()
+    plt.legend()
 
-plt.xlabel("Age (weeks)")
-plt.ylabel("Weight (lbs)")
-plt.title("Age vs. weight")
-plt.grid()
-plt.legend()
-
-st.pyplot(plt.gcf(), use_container_width=False)
+    plt.tight_layout()
+    st.pyplot(plt.gcf(), use_container_width=True) 
