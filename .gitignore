@@ -34,3 +34,5 @@ Thumbs.db
 # data/*.csv
 # data/*.geojson
 # data/*.shp
+.claude/
+.serena/
