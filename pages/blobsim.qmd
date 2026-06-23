@@ -71,12 +71,8 @@ One run's population and total energy over time:
 
 ```{python}
 #| label: setup
-import sys
-sys.path.insert(0, "analysis")   # dev-only data (gitignored)
-import json
 import pandas as pd
 import plotly.io as pio
-import plotly.express as px
 import plotly.graph_objects as go
 pio.templates.default = "plotly"
 
@@ -133,34 +129,6 @@ lifespan, a stable population) and then checks the simulation lands on it within
 tolerance. Passing them all is a statistical precondition: evidence the engine is
 predictable and internally consistent, so that later, non-base-case results can be
 read as findings rather than bugs.
-
-```{python}
-#| label: bench-table
-LABELS = {
-    "B2a": "Single-blob mean lifespan",
-    "SC-1": "Guaranteed extinction on a finite grid",
-    "SC-4": "Boom then bust",
-    "SC-5": "Carrying capacity",
-    "SC-6": "Energy steady-state",
-}
-res = json.load(open("analysis/blobsim/benchmark_results.json"))
-df = pd.DataFrame(res["results"])
-df["check"] = df["id"].map(LABELS).fillna(df["id"])
-df[["check", "predicted", "observed_mean", "tolerance", "passed"]]
-```
-
-```{python}
-#| label: bench-chart
-num = df.dropna(subset=["predicted", "observed_mean"])
-fig = go.Figure()
-fig.add_bar(x=num.check, y=num.predicted, name="predicted")
-fig.add_bar(x=num.check, y=num.observed_mean, name="observed")
-fig.update_layout(barmode="group", height=340, margin=dict(l=0, r=0, t=10, b=0),
-                  legend=dict(orientation="h", y=1.15), yaxis_title="value")
-fig
-```
-
-<!-- TODO: comment on how closely observation tracks prediction overall. -->
 
 ## The base cases
 
