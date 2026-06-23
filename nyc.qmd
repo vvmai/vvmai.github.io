@@ -17,6 +17,9 @@ universally agreed to consist of three things:
 ```{python}
 # Shared setup. Importing streamlit (via data_loaders) flips Plotly's default
 # template to a dark one, so reset it — mirrors the old st.plotly_chart(theme=None).
+import sys
+sys.path.insert(0, "analysis")   # dev-only helpers (gitignored; not needed in CI)
+
 import plotly.express as px
 import plotly.io as pio
 import geopandas as gpd

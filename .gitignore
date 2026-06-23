@@ -28,8 +28,6 @@ Thumbs.db
 # Generated files
 *.png
 !photos/*.png
-!data/*.png
-!assets/**/*.png
 # frozen matplotlib figures must be committed for CI
 !_freeze/**/*.png
 
@@ -37,17 +35,15 @@ Thumbs.db
 _site/
 .playwright-mcp/
 
-# Not needed to render the Pages site (kept locally to regenerate assets/maps/)
+# Dev-only, not needed to render the deployed pages (kept locally):
+#   data/      — raw NYC inputs (44 MB)
+#   analysis/  — NYC analysis helpers, used only to regenerate the _freeze cache
 /data/
-/prerender/
+/analysis/
 
-# Data (optional - uncomment if you want to exclude large data files)
-# data/*.csv
-# data/*.geojson
-# data/*.shp
 .claude/
 .serena/
+
 # Quarto
 /.quarto/
-
-**/*.quarto_ipynb
+**/*.quarto_ipynb*
