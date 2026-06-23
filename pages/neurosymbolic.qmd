@@ -234,24 +234,86 @@ trade it) or merely slow to update (a speed edge, not a logic edge).
 <!-- TODO: the careful conclusion — real mispricings exist, but the profitable middle
 is squeezed from both sides. -->
 
-## Do the tools actually work?
+## Summary — everything the search turned up
 
-Checked separately from whether the *opportunity* exists, on hand-built problems with
-known answers: the logic engine passes all 29 cases; the link-finder recovers every
-built-in link; the failure-classifier passes its cases; the mispricing checker reports
-zero false alarms on 10 correctly-priced links; the cross-series matcher re-finds a
-known textbook link.
+No single trade cleared every bar, but the search produced a set of reusable results
+about *where* a logic edge can and cannot live. Collected here, with how each was
+found and why it holds.
 
-<!-- TODO: the riskiest unverified step — whether the model's translation of a rulebook
-into logic is faithful to the legal text, not yet measured at scale. -->
+### The golden rules
 
-## How much to trust this, and where it stands
+- **Continuous number vs. yes/no — the master heuristic.** A forced link between
+  contracts survives only when the contracts resolve on **yes/no events** (a law
+  passed, a person appointed) and breaks when they resolve on a **continuous number**
+  (a vote share, an inflation reading). *Found:* it was the one test that kept
+  deciding the "holds no matter what else happens" condition across every category
+  scored. *Why:* a continuous strike makes the exact number the operative fact, so for
+  some values the clean implication between two contracts simply fails; a yes/no fact
+  is shared verbatim, so the implication is automatic.
+- **"Does anyone already watch this relationship here?" — the one question that
+  matters.** The three venue/timing conditions (a price history exists, an outside
+  copy exists, a sharp local crowd does the logic) collapse into this single test.
+  *Why:* a watched relationship is already priced, so the only exploitable link is one
+  nobody watches — which also means **any edge is temporary**, closing the moment
+  attention arrives.
+- **The outside-copy killer dominates everything.** *Found:* sorting the ~11k contract
+  families by "does an external market price the same bet?" splits them ~3,674 dead
+  (Sports 2,221, Economics 572, Financials 568, Crypto 253, Commodities 60) vs. ~7,287
+  native-to-Kalshi. *Why:* wherever the same exposure trades elsewhere (a future, a
+  sportsbook line, a terminal), professionals keep *that* market coherent and the
+  correct price flows back to Kalshi.
 
-Most "dead" verdicts come from one example or small-sample reasoning, not exhaustive
-search — "dead" means *strong evidence against, so I stopped looking*, not *proven
-impossible*. The machinery works end-to-end; a capturable, profitable opportunity is
-**not yet confirmed** anywhere. The open next step is the deep fine-print reading the
-project was built for, betting that a *large* mispricing — big enough to survive the
-fees — is hiding in rulebooks no one has read closely.
+### Where the edge is, and isn't
 
-<!-- TODO: which of the next moves you'd take. -->
+- **Single-contract fine-print gaps: dead.** In a 20-contract sample ~half had a
+  headline-vs-rulebook gap, but **0 were tradeable** — shallow reading isn't scarce, so
+  any such gap is already priced.
+- **Literal same-number matches across families: ~nonexistent** (a 165-contract scan
+  found essentially none; most "matches" merely cite the same news source). Not a blow
+  — the real target is a *definitional link between different measurements*, which by
+  construction won't appear in a search for identical ones.
+- **Native politics/legal is the fertile ground.** The surface-feature score ranked
+  Entertainment, Politics, Mentions, Sci/Tech on top and Elections, Climate,
+  Economics/Crypto on the bottom — self-consistent with the yes/no rule (the bottom
+  group is dragged down by being number-based and/or outside-copied).
+- **No category has it all; the target is a *pair*.** A usable opportunity needs
+  native + hidden + recurring simultaneously, but every category has at most two of the
+  three (e.g. Sports has structure and yes/no framing but is outside-copied). So the
+  edge is a rare specific *pair of contracts*, not a property of any category — which
+  is why a targeted hand-search beats betting a whole category.
+- **Different framing only helps if it splits the crowd.** The AI-model-ranking pair
+  (company-framed vs. model-framed off one leaderboard) failed because the *same* crowd
+  traded both framings — different labels, one blind spot, no edge.
+
+### The one concrete proof, and the wall it hit
+
+- **A real Kalshi-native mispricing exists.** The House-Speakership bundle equals
+  House-control split by Senate control — logically forced, decided by one authority,
+  framed two very different ways, watched by two different crowds, every leg heavily
+  traded, and genuinely **incoherent** (a bundle-implied 76% against a 78% direct bid,
+  a 2¢ gap). This is the first concrete proof the target class is non-empty.
+- **The fee squeeze — the deepest negative result.** Liquid legs force the gap to be
+  tiny, and the exchange's per-leg taker fee (~4.5¢ across three legs) exceeds it (2¢).
+  A *large* gap would require at least one badly-priced leg — but a badly-priced leg is
+  either barely traded (you can't actually trade it) or merely slow to update (a speed
+  edge, not a logic edge). **The profitable middle is squeezed from both sides.**
+
+### The machinery itself
+
+- **Division of labor.** The language model only does the fuzzy work (reading and
+  translating rulebooks); everything provable goes to a solver (Z3). A required
+  **grounding** label on each claimed link makes "merely true about the world" links
+  impossible to write down and checks the resolver is obligated to honor the link at
+  payout. The **force score** counts how many joint outcomes a contract rules out — a
+  set-level measure that catches three-way links a pairwise scan would miss.
+- **Verified end-to-end** on known-answer cases (logic engine 29/29, link-finder
+  recovers every built-in link, mispricing checker 0 false alarms on 10 correctly-priced
+  links, cross-series matcher re-finds recession ↔ GDP). The one risk not yet measured
+  at scale is **translation faithfulness** — whether the model's rulebook→logic
+  conversion matches the legal text.
+
+> **Bottom line.** The tools work; Kalshi-native logical mispricings provably exist;
+> but none found so far is capturable, each dying to a known cause — an outside copy, a
+> continuous strike, a shared crowd, an untraded leg, or fees larger than the gap.
+
+<!-- TODO: add/curate the insights you most want to highlight, and your call on next steps. -->
