@@ -620,22 +620,14 @@ a {
   --#{$prefix}toast-header-color: #fff;
 }
 
-// --- Local styling: brite-lime docked sidebar with dark text.
-#quarto-sidebar,
-.sidebar.sidebar-navigation {
+// --- Local styling: brite-lime top navbar with dark text/icons.
+.navbar {
   background-color: $primary;
-  border-right: 2px solid $black;
+  --bs-navbar-color: #{rgba($black, .75)};
+  --bs-navbar-hover-color: #{$black};
+  --bs-navbar-active-color: #{$black};
+  --bs-navbar-brand-color: #{$black};
 }
-#quarto-sidebar a,
-#quarto-sidebar .sidebar-item-text,
-#quarto-sidebar .sidebar-section .sidebar-item-text {
-  color: $black;
-}
-// Hide the "brainvomit" brand so "About" is the first item (search box stays).
-#quarto-sidebar .sidebar-title { display: none; }
-// Active page: outlined pill so it reads on the lime background.
-#quarto-sidebar .sidebar-item .sidebar-item-text.active,
-#quarto-sidebar .sidebar-link.active {
-  font-weight: 700;
-  text-decoration: underline;
-}
+.navbar .navbar-nav .nav-link,
+.navbar .quarto-navbar-tools a,
+.navbar .navbar-brand { color: $black; }

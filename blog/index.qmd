@@ -1,0 +1,12 @@
+---
+title: "Blog"
+listing:
+  contents: posts          # drop post .qmd files (or folders) under blog/posts/
+  type: default            # try: default | table | grid
+  sort: "date desc"
+  fields: [date, title, description, reading-time]
+  feed: true
+page-layout: full
+---
+
+_Nothing here yet — add posts under `blog/posts/`._
