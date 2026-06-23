@@ -145,11 +145,16 @@ read as findings rather than bugs.
 
 ### A single blob's lifespan
 
-**The rule.** With a positive move cost, a lone blob lives in two phases: while it
-has enough energy it wanders (paying a higher average cost per step), and once it
-drops below that level it can only rest at a fixed cost until it starves. Summing the
-two phases predicts an average lifespan of about **186 steps**; the run observed
-185.9.
+**The rule.** A lone blob lives in two phases: an *active* phase where it can still
+afford to move (paying a higher average cost per step) and a *resting* phase, below
+that affordability threshold, where it can only idle at the fixed metabolic cost until
+it starves. Adding the expected length of both phases gives a closed form,
+
+$$E[\tau] \;=\; \frac{E_0 - B}{E[c]} \;+\; \frac{B}{M} \;+\; (\text{boundary correction}),$$
+
+with starting energy $E_0$, resting cost $M$, average active cost $E[c]$, and the
+affordability threshold $B$ below which moving is no longer possible. For the test
+parameters this predicts **≈ 186 steps**; the run observed 185.9.
 
 <!-- TODO: why the two-phase split, in your words. -->
 
@@ -157,9 +162,13 @@ two phases predicts an average lifespan of about **186 steps**; the run observed
 
 **The rule.** If the environment adds no energy, then every step at least some energy
 is spent and never returned, so the world's total can only fall. With a finite
-starting amount, every blob must therefore die within a bounded number of steps — and
-reproduction can't save them, because offspring are funded from parents (energy only
-moves, it isn't created). The animation above shows exactly this.
+starting amount $E_0$ and a smallest per-step metabolic cost $m$, every blob must die
+within
+
+$$T_\text{max} = \left\lceil E_0 / m \right\rceil$$
+
+steps — and reproduction can't postpone it, because offspring are funded from parents
+(energy only moves, it isn't created). The animation above shows exactly this.
 
 <!-- TODO. -->
 
