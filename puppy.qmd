@@ -4,11 +4,11 @@ title: "Puppy weight calculator"
 
 # Estimating mixed puppies' adult weight
 
-![Baby Pippy on his adoption day, June 13, 2022 (3 months old)](photos/baby_pippy.png)
+![Baby Pippy on his adoption day, June 13, 2022 (3 months old)](photos/baby_pippy.jpg)
 
-![Awkward leggy teenage phase (6 months old)](photos/teen_pip.png)
+![Awkward leggy teenage phase (6 months old)](photos/teen_pip.jpg)
 
-![Old man Chip (1 year old)](photos/old_pippy.png)
+![Old man Chip (1 year old)](photos/old_pippy.jpg)
 
 When I first got Chip, I was looking for a pocketable city dog and was assured by
 the shelter that he was a 'Chiyorkie' mix and wouldn't grow to exceed 15 lbs. I
