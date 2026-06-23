@@ -12,9 +12,11 @@ website:
   favicon: assets/photos/IMG_0830.jpg
   # High-level sections live in the top navbar; the matching left sidebar shows
   # that section's pages; a page outline appears on the right (toc: true).
+  search:
+    location: navbar
+    type: textbox      # inline box in the navbar, not the overlay popup
   navbar:
     background: primary
-    search: true
     left:
       - text: "About"
         href: index.qmd
@@ -29,7 +31,7 @@ website:
         href: https://github.com/vvmai
         aria-label: GitHub
       - icon: linkedin
-        href: https://www.linkedin.com/in/CHANGE-ME   # TODO: your LinkedIn URL
+        href: https://www.linkedin.com/in/vvmai
         aria-label: LinkedIn
   sidebar:
     - title: "Studies"
