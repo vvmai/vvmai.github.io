@@ -22,8 +22,16 @@ jobs:
 
       - uses: quarto-dev/quarto-actions/setup@v2
 
-      # Python cells (the NYC analysis) are pre-executed and cached in _freeze/,
-      # so the build needs no Python/geopandas — Quarto reuses the frozen output.
+      # nyc.qmd is frozen (outputs cached in _freeze/), so its Python cells never
+      # run here — but Quarto still resolves the kernel *name* before reading the
+      # cache. Register an (unused) "brainvomit" kernel so that resolution passes.
+      - name: Register kernel name (never executed; freeze provides outputs)
+        run: |
+          python3 -m pip install --quiet ipykernel
+          python3 -m ipykernel install --user --name brainvomit
+
+      # Python cells are pre-executed and cached in _freeze/, so the build needs
+      # no geopandas/data — Quarto reuses the frozen output.
       - name: Render site
         run: quarto render
 
