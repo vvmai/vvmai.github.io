@@ -312,8 +312,9 @@ found and why it holds.
   at scale is **translation faithfulness** — whether the model's rulebook→logic
   conversion matches the legal text.
 
-> **Bottom line.** The tools work; Kalshi-native logical mispricings provably exist;
-> but none found so far is capturable, each dying to a known cause — an outside copy, a
-> continuous strike, a shared crowd, an untraded leg, or fees larger than the gap.
+> **Conclusion: can't quit my day job (yet).** The tools work and Kalshi-native
+> logical mispricings provably exist — but none found so far is capturable, each dying
+> to a known cause: an outside copy, a continuous strike, a shared crowd, an untraded
+> leg, or fees larger than the gap.
 
 <!-- TODO: add/curate the insights you most want to highlight, and your call on next steps. -->
