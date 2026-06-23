@@ -6,16 +6,50 @@ execute:
   warning: false
 ---
 
-> _Scaffold — prose/interpretation to be filled in. Headings follow the order of
-> discovery; charts and GIFs below are seeded from the real benchmark run._
+> _Scaffold — prose and interpretation to be filled in. Headings follow the order
+> of discovery; the charts and animations are seeded from a real run._
 
-`blobsim` is a small agent-based simulation: "blobs" move, eat, reproduce, and die
-on a grid, with **energy strictly conserved** (every joule a blob spends goes to
-the environment or to dissipation — none is created). The project's point isn't the
-blobs themselves but a discipline: predict aggregate behavior *analytically from
-the rules first*, then check the simulation reproduces it.
+## What it is
 
-<!-- TODO: motivation — why build this, what question it answers. -->
+`blobsim` is a small world that runs on a grid. Each cell can hold one **blob** — a
+simple creature with an energy level. Step by step, every blob senses its
+neighbours, picks an action (move, eat, reproduce, or rest), and pays for it in
+energy. Blobs that run out of energy die; well-fed ones reproduce. The grid itself
+holds energy that blobs eat and that may or may not replenish over time.
+
+The one rule the whole world obeys is **conservation of energy**: energy is never
+created or destroyed, only moved between blobs, the grid, and a "spent" pile. That
+single constraint is what makes the world's behaviour predictable — and checkable.
+
+<!-- TODO: what question this world is meant to explore. -->
+
+## How it is designed
+
+The grid wraps around at the edges (a blob walking off the right side reappears on
+the left). Every step runs the same fixed sequence:
+
+> observe → decide → resolve who-goes-where → charge energy → act → absorb from the
+> grid → update the environment → remove the dead → record
+
+A few deliberate choices:
+
+- **Energy ledger.** A running tally checks, every single step, that all the energy
+  still adds up — so a bug that quietly leaks energy can't hide.
+- **Repeatable.** The same starting seed always produces the exact same run.
+- **Swappable pieces.** A blob's behaviour ("rules"), the environment's behaviour
+  (decaying vs. replenishing), and how movement conflicts are settled can each be
+  swapped out without touching the rest.
+
+<!-- TODO: more on the rules/sensing model and the action costs, in your words. -->
+
+## Inspiration
+
+It starts from Conway's *Game of Life* — cells on a grid that live or die by their
+neighbours — and asks what happens when each cell becomes an individual that has to
+*earn its living*: carry energy, spend it to act, and starve if it can't. The result
+sits somewhere between a cellular automaton and a tiny ecology.
+
+<!-- TODO: the personal hook — why this was worth building. -->
 
 ```{python}
 #| label: setup
@@ -28,19 +62,17 @@ import plotly.express as px
 import plotly.graph_objects as go
 pio.templates.default = "plotly"
 
-import blobsim   # installed from the gol repo wheel
+import blobsim
 ```
 
-## 1. The simulation, in motion
+## The world in motion
 
-Each blob senses neighbors, picks an action (move / eat / reproduce / idle), and
-pays an energy cost. Watch one species deplete a finite grid and go extinct:
+A finite grid with no replenishment can only end one way — the blobs eat through
+the available energy and die out:
 
-![Two species drawing down a finite grid until extinction (SC-1).](images/blobsim/sc1_decay_extinction.gif)
+![Two kinds of blob draw down a finite grid until none are left.](images/blobsim/sc1_decay_extinction.gif)
 
-<!-- TODO: describe the rule set — sensing, actions, costs, reproduction. -->
-
-A live run, generated in-browser-free by importing the package directly:
+Here is one run's population and total energy over time:
 
 ```{python}
 #| label: live-sim
@@ -70,10 +102,9 @@ traj = pd.DataFrame([
 
 fig = go.Figure()
 fig.add_scatter(x=traj.step, y=traj.population, name="population", yaxis="y1")
-fig.add_scatter(x=traj.step, y=traj.total_energy, name="total energy (blobs+grid)", yaxis="y2")
+fig.add_scatter(x=traj.step, y=traj.total_energy, name="total energy (blobs + grid)", yaxis="y2")
 fig.update_layout(
-    height=380, margin=dict(l=0, r=0, t=10, b=0),
-    xaxis_title="step",
+    height=380, margin=dict(l=0, r=0, t=10, b=0), xaxis_title="step",
     yaxis=dict(title="population"),
     yaxis2=dict(title="energy", overlaying="y", side="right", showgrid=False),
     legend=dict(orientation="h", y=1.12),
@@ -81,83 +112,92 @@ fig.update_layout(
 fig
 ```
 
-<!-- TODO: read off the population dynamics — growth, equilibrium / oscillation. -->
+<!-- TODO: read off the population dynamics. -->
 
-## 2. Validating it: prediction vs. observation
+## Checking the world against the math
 
-Every benchmark computes a target *from the model's rules* (a conservation law, an
-expected lifespan, a carrying capacity) and fails if the simulation deviates. The
-suite as last run:
+Every behaviour below is first predicted *from the rules alone* — a conservation
+law, an expected lifespan, a stable population — and the simulation is judged
+against that prediction. The full set of checks from the last run:
 
 ```{python}
 #| label: bench-table
+LABELS = {
+    "B2a": "Single-blob mean lifespan",
+    "SC-1": "Guaranteed extinction on a finite grid",
+    "SC-4": "Boom then bust",
+    "SC-5": "Carrying capacity",
+    "SC-6": "Energy steady-state",
+}
 res = json.load(open("analysis/blobsim/benchmark_results.json"))
 df = pd.DataFrame(res["results"])
-df[["id", "predicted", "observed_mean", "tolerance", "passed"]]
+df["check"] = df["id"].map(LABELS).fillna(df["id"])
+df[["check", "predicted", "observed_mean", "tolerance", "passed"]]
 ```
 
 ```{python}
 #| label: bench-chart
 num = df.dropna(subset=["predicted", "observed_mean"])
 fig = go.Figure()
-fig.add_bar(x=num.id, y=num.predicted, name="predicted")
-fig.add_bar(x=num.id, y=num.observed_mean, name="observed")
+fig.add_bar(x=num.check, y=num.predicted, name="predicted")
+fig.add_bar(x=num.check, y=num.observed_mean, name="observed")
 fig.update_layout(barmode="group", height=340, margin=dict(l=0, r=0, t=10, b=0),
                   legend=dict(orientation="h", y=1.15), yaxis_title="value")
 fig
 ```
 
-<!-- TODO: comment on the agreement; note where observed sits vs prediction. -->
+<!-- TODO: comment on how closely observation tracks prediction. -->
 
-## 3. Calibration — single-blob lifespan (B2a)
+## What the runs show
 
-A two-phase analytical model predicts mean lifespan E[τ] ≈ 186 steps; the run
-observed 185.9.
+### A single blob's lifespan
 
-<!-- TODO: the two-phase argument (stochastic phase → deterministic idle → death). -->
+Left alone on a draining grid, a blob lives a predictable number of steps on
+average — close to what the energy math says it should.
 
-## 4. Convergence — population-level laws
+<!-- TODO: the two-phase intuition (active while it can afford to move, then resting
+until it starves). -->
 
-### 4.1 Guaranteed extinction (SC-1)
+### Boom, then bust
 
-Finite energy ⇒ extinction within a bounded number of steps, conservation holding
-at the terminus. *(GIF in §1.)*
+Give blobs a rich grid and they multiply fast — until the crowd outstrips the food
+and the population collapses.
+
+![A population explodes to fill the grid, then crashes.](images/blobsim/sc4_boom_bust.gif)
+
+<!-- TODO: why the peak is set by the size of the grid, not the total energy. -->
+
+### Settling at a carrying capacity
+
+With energy replenishing, the population stops growing at a stable level — and it
+reaches roughly the same level whether it starts crowded or sparse.
+
+![Starting crowded, the population relaxes toward a steady level.](images/blobsim/sc5_dense.gif)
+
+<!-- TODO: the surprise — the steady level lands ~25% above the simple prediction,
+because real blobs spread out and waste fewer moves on collisions than the math
+assumes. -->
+
+### A lone blob's energy
+
+A single blob on a rich, replenishing grid quickly fills up to its maximum and
+stays pinned there.
 
 <!-- TODO. -->
 
-### 4.2 Boom then bust (SC-4)
+## Competition between kinds
 
-![Population explodes to grid capacity, then crashes to extinction (SC-4).](images/blobsim/sc4_boom_bust.gif)
+Put two kinds of blob on the same grid and they compete for the same energy:
 
-<!-- TODO: overshoot → depletion → die-off; why the peak is grid-bound, not energy-bound. -->
+![Two kinds of blob compete for one grid.](images/blobsim/c3_competition.gif)
 
-### 4.3 Carrying capacity (SC-5)
+<!-- TODO: who wins, and what decides it. -->
 
-![Dense initialization relaxing toward carrying capacity (SC-5).](images/blobsim/sc5_dense.gif)
+## What I took away, in order
 
-Analytical N\* ≈ 105.9; sparse and dense starts both converge to ~130 — a steady
-**~25% above** prediction.
-
-<!-- TODO: the insight — uniform-mixing overestimates collision waste; real blobs
-spread out, so fewer actions fail. -->
-
-### 4.4 Energy steady-state (SC-6)
-
-A single blob on a rich regenerating grid pins to `max_energy` with zero variance.
-
-<!-- TODO. -->
-
-## 5. Species competition
-
-![Two species competing for the same grid (C3).](images/blobsim/c3_competition.gif)
-
-<!-- TODO: competition dynamics / who wins and why. -->
-
-## Insights, in order of discovery
-
-<!-- TODO: ordered list of the main takeaways, e.g.
-1. Conservation is the backbone — every benchmark is ultimately an energy-accounting check.
-2. Extinction is guaranteed under decay regardless of reproduction (redistribution ≠ creation).
-3. Peaks are grid-bound before they are energy-bound at high density.
-4. The uniform-mixing model systematically over-penalizes collisions (~25% low on N*).
+<!-- TODO: ordered takeaways, e.g.
+1. Conservation is the backbone — every check is ultimately energy bookkeeping.
+2. On a finite grid, extinction is guaranteed; reproduction only moves energy around.
+3. Crowding, not total energy, caps the population at its peak.
+4. The simplest population prediction runs low because it over-counts collisions.
 -->

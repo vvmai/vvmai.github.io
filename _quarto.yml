@@ -24,6 +24,10 @@ website:
         href: nyc.qmd
       - text: "Is grad school worth it?"
         href: grad-school.qmd
+      - text: "blobsim: a world of blobs"
+        href: blobsim.qmd
+      - text: "Arbitrage in prediction markets"
+        href: neurosymbolic.qmd
 
 format:
   html:

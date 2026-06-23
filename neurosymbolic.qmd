@@ -1,0 +1,257 @@
+---
+title: "Hunting logical arbitrage in prediction markets"
+jupyter: brainvomit
+execute:
+  echo: false
+  warning: false
+---
+
+> _Scaffold — the introduction is condensed from my project notes; the findings
+> follow the order of discovery, and the charts are seeded from the real run.
+> Deeper interpretation still to be filled in._
+
+## The idea
+
+A prediction market sells **contracts** that pay \$1 if a stated thing happens and
+\$0 if it doesn't, so a contract's price acts like the crowd's estimate of the
+probability. The familiar ways to make risk-free money here — prices that don't add
+up, or the same bet priced differently on two sites — vanish fast once professional
+traders arrive, leaving a race won by whoever is fastest.
+
+This project tests a different kind of opportunity: one you find by **reasoning**,
+not by being fast. Every contract has a **rulebook** — the precise legal text that
+decides payout. The plan: use a language model to read those rulebooks and translate
+them into formal logic, then hand that logic to an automated theorem-prover (a
+**solver**) that can *prove* when two or more contracts' prices logically
+contradict each other. A proven contradiction is a guaranteed-profit trade. The edge,
+if it exists, comes from reading fine print nobody bothered to combine — not from
+trading faster.
+
+<!-- TODO: your framing / why this caught your interest. -->
+
+## Why it's possible only now
+
+Two things had to arrive together: **markets that trade yes/no claims** (logic needs
+true/false statements to work on), and **cheap reading of dense legal text** (turning
+exception-riddled fine print into clean structure used to take a human per contract;
+language models made it cheap at scale).
+
+## Why deduction, not prediction
+
+**Induction** learns patterns from data ("it went up the last ten times") — what
+essentially all quantitative trading does. **Deduction** proves something *must*
+follow from rules ("if one party controls the House, the Speaker is necessarily from
+that party"). Prediction markets are the first asset class where deduction bites,
+because they trade true/false claims that can logically depend on one another.
+
+There's also a reason we *must* stay with deduction: a market event happens once, and
+for a one-time event a single "true probability" is ill-defined. What *is* well-defined
+is **coherence** — whether a set of prices contradict each other right now. That can be
+checked today, predicting nothing. Trust comes from a **division of labor**: the
+language model does only the fuzzy part (reading and translating); everything with a
+provably-correct answer goes to the solver.
+
+<!-- TODO. -->
+
+## How the machinery works
+
+The expensive step — carefully reading a rulebook, turning it into logic, checking it
+with the solver — is spent only on promising candidates, picked out by cheap filters
+first. The pipeline:
+
+> is it actually being traded? → translate rulebooks into logic → is the link
+> *enforceable* (forced by the rules, not just true about the world)? → score how much
+> the contracts pin each other down → grow the set toward whatever adds the most force
+
+Two ideas do the heavy lifting. A **grounding** label attached to every claimed link
+names *what* connects two contracts — which makes "merely true about the world" links
+impossible to write down, and checks the resolver is actually obligated to honor the
+link at payout. And the **force score** counts how many still-possible outcomes a
+contract rules out, a set-level measure that can catch a link only visible when three
+or more contracts combine.
+
+Whether a search is even worth starting is decided up front by a break-even rule —
+the fraction of groups that must contain a tradeable find to justify the cost:
+
+$$p_1 = \frac{C_\text{cluster}}{V_\text{find}\times R}$$
+
+where $C_\text{cluster}$ is the cost to examine one group, $V_\text{find}$ the profit
+per find (capped by how much the market can absorb), and $R$ how many times one
+discovery pays off.
+
+<!-- TODO: anything you want to draw out about the architecture. -->
+
+## What a usable opportunity must look like
+
+The relationship has to be **forced by the rulebooks** (not the casual descriptions),
+**true no matter how the world turns out**, **hidden across contracts** (visible only
+by reading two or more together), **honored at payout** (same resolver, same rules),
+and **contradicted by the actual tradeable prices** — with real volume on every leg at
+once. Conditions about history, outside copies, and the crowd all collapse into one
+question: **does anyone already watch this relationship here?** If yes, it's priced.
+So the target is one *nobody* watches — which makes any such opportunity temporary.
+
+## The rule of thumb that emerged
+
+> The logic breaks when a contract resolves on a **continuous number** (a vote share,
+> an inflation reading) and holds when it resolves on a **yes/no event** (a law passed,
+> a person appointed).
+
+So economics and elections (number-based) look dead; legal and political events
+(yes/no) are the promising ground.
+
+<!-- TODO: why a continuous strike destroys the forced link. -->
+
+## Results, in order of discovery
+
+### 1. Single contracts — dead end
+
+In a 20-contract sample, about half had a gap between headline and fine print; **none
+were tradeable** (each gap was harmless or already priced). Reading one contract is
+easy, so the edge is gone.
+
+<!-- TODO. -->
+
+### 2. Economics & finance — almost certainly dead
+
+Nearly every economics/finance contract also trades elsewhere (rate futures, yields,
+official series), where professionals keep it priced — the **outside-copy killer**.
+Sorting the catalog by "does an outside copy exist?":
+
+```{python}
+#| label: setup
+import sys
+sys.path.insert(0, "analysis")   # dev-only data (gitignored)
+import json
+import pandas as pd
+import plotly.io as pio
+import plotly.express as px
+pio.templates.default = "plotly"
+
+scorecard = pd.DataFrame(json.load(open("analysis/neurosymbolic/bfs_scorecard.json")))
+
+split = pd.DataFrame([
+    ("Sports", 2221, "outside copy (dead)"), ("Economics", 572, "outside copy (dead)"),
+    ("Financials", 568, "outside copy (dead)"), ("Crypto", 253, "outside copy (dead)"),
+    ("Commodities", 60, "outside copy (dead)"),
+    ("Entertainment", 2451, "native (promising)"), ("Politics", 2013, "native (promising)"),
+    ("Elections", 1402, "native (promising)"), ("Mentions", 373, "native (promising)"),
+    ("Climate/Weather", 281, "native (promising)"), ("Sci/Tech", 264, "native (promising)"),
+    ("Companies", 173, "native (promising)"), ("World", 142, "native (promising)"),
+    ("Health", 96, "native (promising)"),
+], columns=["category", "n_series", "group"])
+fig = px.bar(split.sort_values("n_series"), x="n_series", y="category", color="group",
+             orientation="h", height=460,
+             color_discrete_map={"outside copy (dead)": "#d62728", "native (promising)": "#2ca02c"})
+fig.update_layout(margin=dict(l=0, r=0, t=10, b=0), legend=dict(orientation="h", y=1.06),
+                  yaxis_title="", xaxis_title="contract families")
+fig
+```
+
+<!-- TODO: the fertile ground is Kalshi-native; politics and legal events the best. -->
+
+### 3. Contracts about the exact same number — barely exist
+
+A 165-contract scan found essentially zero genuine matches on the *literal same
+measurement* across families; most apparent matches just cite the same news source.
+Expected — the real target is a definitional link between *different* measurements.
+
+<!-- TODO. -->
+
+### 4. Scoring every category
+
+A surface-feature score rates each category on how native, yes/no, multi-contract,
+and recurring it is. Higher = more promising:
+
+```{python}
+#| label: promise-chart
+sc = scorecard.sort_values("promise")
+fig = px.bar(sc, x="promise", y="category", orientation="h", height=440,
+             color="native", color_discrete_map={True: "#2ca02c", False: "#d62728"})
+fig.update_layout(margin=dict(l=0, r=0, t=10, b=0), yaxis_title="",
+                  legend=dict(orientation="h", y=1.06, title="native to Kalshi"))
+fig
+```
+
+The continuous-number trap made visible — the share of each category resolving on a
+yes/no event vs. on a continuous number:
+
+```{python}
+#| label: binary-continuous
+m = scorecard.melt(id_vars="category", value_vars=["binary_frac", "continuous_frac"],
+                   var_name="kind", value_name="frac")
+fig = px.bar(m.sort_values("frac"), x="frac", y="category", color="kind", orientation="h",
+             height=440, color_discrete_map={"binary_frac": "#2ca02c", "continuous_frac": "#d62728"})
+fig.update_layout(barmode="stack", margin=dict(l=0, r=0, t=10, b=0), yaxis_title="",
+                  xaxis_title="fraction", legend=dict(orientation="h", y=1.06))
+fig
+```
+
+<!-- TODO: caution — "many contracts per event" is not "logically linked." -->
+
+### 5. Sports — good structure, killed by other exchanges
+
+Sports has the best raw structure (many related yes/no bets on one game) and dodges
+the continuous-number trap — but every bet also exists at a sportsbook, which keeps
+the set priced. *Sports is economics with a yes/no coat of paint.* No category has
+"native + hidden + recurring" all at once, so the target is a rare specific **pair** of
+contracts, not a whole category.
+
+<!-- TODO. -->
+
+### 6. The narrowed hunt — AI-model rankings
+
+A targeted search surfaced two AI-model-ranking series off the same leaderboard, one
+framed **by company** and one **by model**, with the obvious link "a company's chance
+is the sum of its models' chances." It failed three predicted ways: the prices already
+agreed within the spread; the same crowd traded both framings; and the two lists didn't
+line up cleanly. *Lesson: different framing only helps if it attracts two genuinely
+different crowds.*
+
+<!-- TODO. -->
+
+### 7. The best find — and the fee that killed it
+
+The strongest find: a **bundled bet on which party wins the House Speakership** equals
+a **direct bet on which party controls the House**, split into the two cases of who
+controls the Senate. It clears every earlier hurdle — logically forced, decided by one
+authority, framed two very different ways, watched by two different crowds, every leg
+heavily traded — and it was genuinely incoherent:
+
+| | value |
+| --- | --- |
+| Bundle implies P(party controls House) | **76%** |
+| Direct contract bid | **78%** |
+| Gross logical gap | **2¢** |
+| Open interest across the three legs | \$4.1M / \$990k / \$850k, ~1¢ spreads |
+| Exchange fee across three legs | ~**4.5¢** |
+| **Net** | **≈ −2.5¢** per contract |
+
+The squeeze: liquid legs mean a tiny gap, and the per-leg fee is bigger than the gap. A
+*large* gap would need a badly-priced leg — but that's either barely traded (can't
+trade it) or merely slow to update (a speed edge, not a logic edge).
+
+<!-- TODO: the careful conclusion — real mispricings exist, but the profitable middle
+is squeezed from both sides. -->
+
+## Do the tools actually work?
+
+Checked separately from whether the *opportunity* exists, on hand-built problems with
+known answers: the logic engine passes all 29 cases; the link-finder recovers every
+built-in link; the failure-classifier passes its cases; the mispricing checker reports
+zero false alarms on 10 correctly-priced links; the cross-series matcher re-finds a
+known textbook link.
+
+<!-- TODO: the riskiest unverified step — whether the model's translation of a rulebook
+into logic is faithful to the legal text, not yet measured at scale. -->
+
+## How much to trust this, and where it stands
+
+Most "dead" verdicts come from one example or small-sample reasoning, not exhaustive
+search — "dead" means *strong evidence against, so I stopped looking*, not *proven
+impossible*. The machinery works end-to-end; a capturable, profitable opportunity is
+**not yet confirmed** anywhere. The open next step is the deep fine-print reading the
+project was built for, betting that a *large* mispricing — big enough to survive the
+fees — is hiding in rulebooks no one has read closely.
+
+<!-- TODO: which of the next moves you'd take. -->
