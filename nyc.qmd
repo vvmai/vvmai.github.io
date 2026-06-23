@@ -20,7 +20,7 @@ universally agreed to consist of three things:
 import sys
 sys.path.insert(0, "analysis")   # dev-only helpers (gitignored; not needed in CI)
 
-import plotly.express as px
+import plotly.graph_objects as go
 import plotly.io as pio
 import geopandas as gpd
 
@@ -42,16 +42,23 @@ H3_RESOLUTION = 9
 CENTRALITY_PERCENTILE = 0.95
 
 
-def choropleth(X, color_col, color_scale=None):
-    fig = px.choropleth_mapbox(
-        X, geojson=X.geometry, color=color_col, opacity=0.5, locations=X.index,
-        mapbox_style="open-street-map", center={"lat": 40.7, "lon": -73.95},
-        zoom=10, height=600, range_color=(0, X[color_col].quantile(CENTRALITY_PERCENTILE)),
+GEOJSON_URL = "hexes.geojson"   # written once below; all 4 maps reference it
+
+
+def choropleth(X, color_col, color_scale="Plasma"):
+    # geojson is referenced by URL (not embedded), so the 4 maps share one copy
+    # of the hex geometry the browser fetches once instead of inlining it 4x.
+    fig = go.Figure(go.Choroplethmapbox(
+        geojson=GEOJSON_URL, featureidkey="properties.id",
+        locations=X.index.astype(str), z=X[color_col],
+        zmin=0, zmax=X[color_col].quantile(CENTRALITY_PERCENTILE),
+        colorscale=color_scale, marker_opacity=0.5, marker_line_width=0,
+    ))
+    fig.update_layout(
+        mapbox_style="open-street-map", mapbox_zoom=10,
+        mapbox_center={"lat": 40.7, "lon": -73.95},
+        margin=dict(l=0, r=0, t=0, b=0), height=600,
     )
-    fig.update_traces(marker_line_width=0)
-    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
-    if color_scale:
-        fig.update_layout(coloraxis={"colorscale": color_scale})
     return fig
 ```
 
@@ -124,6 +131,13 @@ X = add_metric_to_hexgrid(get_nyc_geo(), nyc_connectivity, 'centrality_metric',
 import shapely
 X['geometry'] = shapely.set_precision(X.geometry.values, grid_size=1e-5)
 
+# Write the hex geometry ONCE to a geojson the 4 maps fetch by URL (id in
+# properties so featureidkey="properties.id" matches each map's locations).
+_geo = X[['geometry']].copy()
+_geo['id'] = _geo.index.astype(str)
+with open(GEOJSON_URL, 'w') as _f:
+    _f.write(_geo.to_json())
+
 station_centrality.rename(columns={'station_name': 'Station Name',
                                    'centrality_metric': 'Centrality Score'}).head(20)
 ```
@@ -153,7 +167,7 @@ cols = ['index', 'shape_area', 'shape_leng', 'geometry', 'centrality_metric', 't
 X = X[cols].drop_duplicates()
 X = normalize_metric(X, 'trees')
 X['trees'] = X[['trees']].h3.k_ring_smoothing(weights=[2, 1])['trees']
-choropleth(X, 'trees', color_scale='greens')
+choropleth(X, 'trees', color_scale='Greens')
 ```
 
 *Tree counts have been normalized to a 0–1 score.*
@@ -181,7 +195,7 @@ it twice as much as the other two to break up the Manhattan monolith.
 
 ```{python}
 X['overall_score'] = (2 * X['trees'] + 0.5 * X['centrality_metric'] + 0.5 * X['restaurants']) / 3
-choropleth(X, 'overall_score', color_scale='rdylgn')
+choropleth(X, 'overall_score', color_scale='RdYlGn')
 ```
 
 ## Summary

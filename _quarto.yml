@@ -1,13 +1,18 @@
 project:
   type: website
   output-dir: _site
+  resources:
+    - hexes.geojson   # shared hex geometry the NYC maps fetch by URL
 
 website:
   title: "brainvomit"
   favicon: photos/IMG_0830.jpg
+  search:
+    location: sidebar
+    type: textbox
   sidebar:
     style: docked
-    search: false
+    search: true
     contents:
       - text: "About"
         href: index.qmd
