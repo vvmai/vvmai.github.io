@@ -2,7 +2,7 @@
 title: "Quick maths"
 ---
 
-A couple of one-formula calculators.
+Essential calculations for everyday life
 
 ## Slim Jim percentage
 
@@ -39,9 +39,6 @@ ${comment}`;
 ## Conscious lifespan vs. sleep tradeoff
 
 How much *waking* life you have left, and what each hour of sleep trades away.
-Eight hours a night is the baseline; sleep more and your conscious years shrink,
-sleep less and they grow.
-
 ```{ojs}
 //| echo: false
 viewof currentAge = Inputs.number({label: "Current age (yr)", min: 0, step: 1, value: 23})
@@ -61,7 +58,7 @@ viewof sleepHours = Inputs.number({label: "Sleep per night (hr)", min: 0, max: 2
   const delta     = conscious - baseline;                    // + gained, − lost vs 8h
 
   const compared = sleepHours === 8
-    ? "That's exactly the 8 h/night baseline."
+    ? "This is baseline."
     : `Versus the 8 h/night baseline, you ${delta >= 0 ? "**gain**" : "**lose**"} ` +
       `**${Math.abs(delta).toFixed(1)} conscious years** by sleeping ` +
       `${sleepHours > 8 ? "more" : "less"}.`;
@@ -75,5 +72,5 @@ ${compared}`;
 
 ::: {.callout-note}
 Assumes all else equal — in particular that your lifespan doesn't change with how
-much you sleep. (In reality it does; this is a toy.)
+much you sleep
 :::

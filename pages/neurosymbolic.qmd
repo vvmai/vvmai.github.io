@@ -83,7 +83,12 @@ once. Conditions about history, outside copies, and the crowd all collapse into 
 question: **does anyone already watch this relationship here?** If yes, it's priced.
 So the target is one *nobody* watches — which makes any such opportunity temporary.
 
-<!-- TODO: why a continuous strike destroys the forced link. -->
+One rule, found by scoring category after category, decides the "true no matter what"
+condition: **a forced link survives when both contracts resolve on a yes/no event and
+breaks the moment either resolves on a continuous number.** A continuous strike (a vote
+share, an inflation reading) makes the exact number the operative fact, so for some
+values the implication between two contracts simply fails. A yes/no fact (a law passed,
+a person appointed) is shared verbatim, so the implication holds automatically.
 
 ## Findings
 
@@ -131,15 +136,18 @@ fig.update_layout(margin=dict(l=0, r=0, t=10, b=0), legend=dict(orientation="h",
 fig
 ```
 
-<!-- TODO: the fertile ground is Kalshi-native; politics and legal events the best. -->
+The split is lopsided: ~3,674 families have an outside copy and are effectively dead
+(Sports 2,221, Economics 572, Financials 568, Crypto 253, Commodities 60) against
+~7,287 native to Kalshi. The fertile ground is the native side — **politics and legal
+events especially**, where one official ruling gets described across very different
+contracts and the link hides in the fine print.
 
 ### 3. Contracts about the exact same number — barely exist
 
 A 165-contract scan found essentially zero genuine matches on the *literal same
 measurement* across families; most apparent matches just cite the same news source.
-Expected — the real target is a definitional link between *different* measurements.
-
-<!-- TODO. -->
+Expected — the real target is a definitional link between *different* measurements,
+which by construction won't show up in a search for identical ones.
 
 ### 4. Scoring every category
 
@@ -170,7 +178,11 @@ fig.update_layout(barmode="stack", margin=dict(l=0, r=0, t=10, b=0), yaxis_title
 fig
 ```
 
-<!-- TODO: caution — "many contracts per event" is not "logically linked." -->
+Top of the ranking: Entertainment, Politics, Mentions, Sci/Tech; bottom: Elections and
+Climate (number-based) and Economics/Crypto (outside-copied) — self-consistent with the
+yes/no rule. One caution: a high score only means *many contracts share an event*, not
+that their rulebooks *force* each other. The score reads surface features; only reading
+the rulebooks together confirms a real link.
 
 ### 5. Sports — good structure, killed by other exchanges
 
@@ -178,7 +190,8 @@ Sports has the best raw structure (many related yes/no bets on one game) and dod
 the continuous-number trap — but every bet also exists at a sportsbook, which keeps
 the set priced. *Sports is economics with a yes/no coat of paint.* No category has
 "native + hidden + recurring" all at once, so the target is a rare specific **pair** of
-contracts, not a whole category.
+contracts, not a whole category — which is why a targeted hand-search beats betting on
+a category.
 
 <!-- TODO. -->
 
@@ -210,67 +223,17 @@ heavily traded — and it was genuinely incoherent:
 | Exchange fee across three legs | ~**4.5¢** |
 | **Net** | **≈ −2.5¢** per contract |
 
-The squeeze: liquid legs mean a tiny gap, and the per-leg fee is bigger than the gap. A
-*large* gap would need a badly-priced leg — but that's either barely traded (can't
-trade it) or merely slow to update (a speed edge, not a logic edge).
+This is the first concrete proof the target class is non-empty: Kalshi-native logical
+mispricings, with split crowds and fully-liquid legs, do exist. But the profitable
+middle is squeezed from both sides — a *liquid* mispricing is forced tiny (the per-leg
+fee, ~4.5¢ on three legs, exceeds the 2¢ gap), while a *large* gap needs a badly-priced
+leg, which is either barely traded (you can't trade it) or merely slow to update (a
+speed edge, not a logic edge).
 
-<!-- TODO: the careful conclusion — real mispricings exist, but the profitable middle
-is squeezed from both sides. -->
+## Conclusion
 
-## Summary
-### The golden rules
+Can't quit my day job — the tools work and Kalshi-native logical mispricings provably
+exist, but none found so far is capturable: each dies to an outside copy, a continuous
+strike, a shared crowd, an untraded leg, or a fee bigger than the gap.
 
-- **Continuous number vs. yes/no — the master heuristic.** A forced link between
-  contracts survives only when the contracts resolve on **yes/no events** (a law
-  passed, a person appointed) and breaks when they resolve on a **continuous number**
-  (a vote share, an inflation reading). *Found:* it was the one test that kept
-  deciding the "holds no matter what else happens" condition across every category
-  scored. *Why:* a continuous strike makes the exact number the operative fact, so for
-  some values the clean implication between two contracts simply fails; a yes/no fact
-  is shared verbatim, so the implication is automatic.
-- **"Does anyone already watch this relationship here?" — the one question that
-  matters.** The three venue/timing conditions (a price history exists, an outside
-  copy exists, a sharp local crowd does the logic) collapse into this single test.
-  *Why:* a watched relationship is already priced, so the only exploitable link is one
-  nobody watches — which also means **any edge is temporary**, closing the moment
-  attention arrives.
-- **The outside-copy killer dominates everything.** *Found:* sorting the ~11k contract
-  families by "does an external market price the same bet?" splits them ~3,674 dead
-  (Sports 2,221, Economics 572, Financials 568, Crypto 253, Commodities 60) vs. ~7,287
-  native-to-Kalshi. *Why:* wherever the same exposure trades elsewhere (a future, a
-  sportsbook line, a terminal), professionals keep *that* market coherent and the
-  correct price flows back to Kalshi.
-
-### Where the edge is, and isn't
-
-  — the real target is a *definitional link between different measurements*, which by
-  construction won't appear in a search for identical ones.
-- **Native politics/legal is the fertile ground.** The surface-feature score ranked
-  Entertainment, Politics, Mentions, Sci/Tech on top and Elections, Climate,
-  Economics/Crypto on the bottom — self-consistent with the yes/no rule (the bottom
-  group is dragged down by being number-based and/or outside-copied).
-- **No category has it all; the target is a *pair*.** A usable opportunity needs
-  native + hidden + recurring simultaneously, but every category has at most two of the
-  three (e.g. Sports has structure and yes/no framing but is outside-copied). So the
-  edge is a rare specific *pair of contracts*, not a property of any category — which
-  is why a targeted hand-search beats betting a whole category.
-- **Different framing only helps if it splits the crowd.** The AI-model-ranking pair
-  (company-framed vs. model-framed off one leaderboard) failed because the *same* crowd
-  traded both framings — different labels, one blind spot, no edge.
-
-
-- **A real Kalshi-native mispricing exists.** The House-Speakership bundle equals
-  House-control split by Senate control — logically forced, decided by one authority,
-  framed two very different ways, watched by two different crowds, every leg heavily
-  traded, and genuinely **incoherent** (a bundle-implied 76% against a 78% direct bid,
-  a 2¢ gap). This is the first concrete proof the target class is non-empty.
-- **The fee squeeze — the deepest negative result.** Liquid legs force the gap to be
-  tiny, and the exchange's per-leg taker fee (~4.5¢ across three legs) exceeds it (2¢).
-  A *large* gap would require at least one badly-priced leg — but a badly-priced leg is
-  either barely traded (you can't actually trade it) or merely slow to update (a speed
-  edge, not a logic edge). **The profitable middle is squeezed from both sides.**
-
-
-**Conclusion:** can't quit my day job
-
-<!-- TODO: add/curate the insights you most want to highlight, and your call on next steps. -->
+<!-- TODO: your call on next steps. -->
