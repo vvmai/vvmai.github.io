@@ -5,13 +5,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Allow the workflow to publish to Pages.
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# One concurrent deployment; don't cancel an in-progress run.
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -22,22 +20,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Assemble static site
-        run: |
-          mkdir -p _site
-          cp index.html _site/
-          # SPA deep-link fallback: Pages serves 404.html for unresolved paths;
-          # it redirects through index.html to restore the exact sub-page.
-          cp 404.html _site/404.html
-          cp app.py About.py utils.py _site/
-          mkdir -p _site/.streamlit
-          cp .streamlit/config.toml _site/.streamlit/
-          cp -r pages _site/pages
-          cp -r photos _site/photos
-          mkdir -p _site/assets
-          cp -r assets/maps _site/assets/maps
-          # Pages serves the artifact verbatim; no Jekyll processing.
-          touch _site/.nojekyll
+      - uses: quarto-dev/quarto-actions/setup@v2
+
+      # Python cells (the NYC analysis) are pre-executed and cached in _freeze/,
+      # so the build needs no Python/geopandas — Quarto reuses the frozen output.
+      - name: Render site
+        run: quarto render
 
       - uses: actions/upload-pages-artifact@v3
         with:

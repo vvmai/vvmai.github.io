@@ -1,16 +1,26 @@
 # brainvomit
 
-Streamlit app served static on GitHub Pages via [stlite](https://github.com/whitphx/stlite) (Pyodide/WASM, runs in browser, no server).
+Personal site built with [Quarto](https://quarto.org) → static HTML on GitHub Pages
+(`https://vvmai.github.io`). No server, no runtime download.
 
-- `index.html` — stlite mount; lists app files + pip deps (pandas/numpy/scipy/matplotlib/shapely).
-- `app.py`, `About.py`, `pages/`, `utils.py` — unmodified Streamlit, runs in browser.
-- `assets/maps/` — pre-rendered NYC outputs (Plotly HTML + network PNG + ranking CSV).
-- `prerender/` — offline generator for `assets/maps/` (heavy geo deps; NOT deployed). `data/` = its inputs.
-- `.github/workflows/deploy.yml` — push to `main` → assemble static site → Pages.
+- `*.qmd` — pages (Markdown). Sidebar/nav/theme in `_quarto.yml` (default `cosmo`).
+- Interactive pages (slim-jim, grad-school, puppy) use **OJS** (client-side, reactive). Puppy's sigmoid fit is a self-contained JS Levenberg–Marquardt — no CDN dep.
+- `nyc.qmd` — heavy geo analysis as **Python cells**, kernel `brainvomit` (the `.venv`). Outputs cached in `_freeze/` (committed) so CI renders without geopandas or `data/`.
+- `data_loaders.py`, `nyc_analysis.py` — NYC analysis helpers (used only at local render).
+- `.github/workflows/deploy.yml` — push to `main` → `quarto render` → Pages.
+
+## Dev loop
+
+```bash
+export PATH="$HOME/.local/quarto-1.9.38/bin:$PATH"   # wherever quarto lives
+quarto preview          # live-reload; Python cells execute, plots inline
+```
+
+Editing a `.qmd` re-renders on save. New page = add `foo.qmd` + a line under `website.sidebar.contents` in `_quarto.yml`.
 
 ## Gotchas
 
-- Pages source must = **GitHub Actions** (Settings → Pages).
-- Prerender resets `pio.templates.default="plotly"` — streamlit import flips it to a dark template (= black maps). Mirrors live `st.plotly_chart(theme=None)`.
-- Regenerate maps: `.venv/bin/python prerender/prerender_nyc.py`
-- Local dev: `python3 -m http.server` (needs HTTP, not file://).
+- Pages source must = **GitHub Actions** (Settings → Pages). Repo must be public on the free plan.
+- Re-render NYC after changing the analysis: `quarto render nyc.qmd` (needs `.venv` + local `data/`). Commit the updated `_freeze/`.
+- Kernel registered once: `.venv/bin/python -m ipykernel install --user --name brainvomit`.
+- `data/` is gitignored (44 MB raw inputs, local only); `_freeze/` is committed.

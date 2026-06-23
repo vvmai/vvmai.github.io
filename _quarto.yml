@@ -1,0 +1,30 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "brainvomit"
+  favicon: photos/IMG_0830.jpg
+  sidebar:
+    style: docked
+    search: false
+    contents:
+      - text: "About"
+        href: index.qmd
+      - text: "Puppy weight calculator"
+        href: puppy.qmd
+      - text: "Slim Jim percentage"
+        href: slim-jim.qmd
+      - text: "Plotting my next move"
+        href: nyc.qmd
+      - text: "Is grad school worth it?"
+        href: grad-school.qmd
+
+format:
+  html:
+    theme: cosmo   # Quarto default; no custom styling yet
+
+# Heavy Python cells (the NYC analysis) execute locally once; outputs are cached
+# in _freeze/ and committed, so CI deploys without geopandas or the raw data.
+execute:
+  freeze: auto

@@ -45,3 +45,7 @@ _site/
 # data/*.shp
 .claude/
 .serena/
+# Quarto
+/.quarto/
+
+**/*.quarto_ipynb

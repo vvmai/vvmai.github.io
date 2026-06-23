@@ -1,0 +1,138 @@
+---
+title: "Puppy weight calculator"
+---
+
+# Estimating mixed puppies' adult weight
+
+![Baby Pippy on his adoption day, June 13, 2022 (3 months old)](photos/baby_pippy.png)
+
+![Awkward leggy teenage phase (6 months old)](photos/teen_pip.png)
+
+![Old man Chip (1 year old)](photos/old_pippy.png)
+
+When I first got Chip, I was looking for a pocketable city dog and was assured by
+the shelter that he was a 'Chiyorkie' mix and wouldn't grow to exceed 15 lbs. I
+knew something was up when I picked him up and he was much bigger than he had
+appeared in the pictures. When I took him to the vet that same day, he was already
+11.4 lbs at 14 weeks old and underweight. For the next 9 months, I would become
+obsessed with estimating his adult weight. I checked his weight religiously and
+made the following toy model. His final adult weight is 29.5–30.0 lbs, so it turns
+out that a sigmoid function is pretty good at capturing puppies' growth (at least
+with N = 1 🙂).
+
+Edit the `age (wks), weight (lbs)` data below (one pair per line) and the sigmoid
+refits live.
+
+```{ojs}
+//| echo: false
+// Self-contained Levenberg–Marquardt fit (numerical Jacobian) for the 4-param
+// logistic L/(1+e^{-k(x-x0)})+b — no external runtime dependency.
+fitSigmoid = function (x, y, p0) {
+  const m = 4, n = x.length;
+  const f = (p, xi) => p[0] / (1 + Math.exp(-p[2] * (xi - p[1]))) + p[3];
+  const cost = p => x.reduce((s, xi, i) => { const e = f(p, xi) - y[i]; return s + e * e; }, 0);
+  const solve = (A, bb) => {                       // Gaussian elimination, m×m
+    const M = A.map((row, i) => [...row, bb[i]]);
+    for (let c = 0; c < m; c++) {
+      let piv = c;
+      for (let r = c + 1; r < m; r++) if (Math.abs(M[r][c]) > Math.abs(M[piv][c])) piv = r;
+      [M[c], M[piv]] = [M[piv], M[c]];
+      if (Math.abs(M[c][c]) < 1e-12) M[c][c] = 1e-12;
+      for (let r = 0; r < m; r++) if (r !== c) {
+        const f2 = M[r][c] / M[c][c];
+        for (let k = c; k <= m; k++) M[r][k] -= f2 * M[c][k];
+      }
+    }
+    return M.map((row, i) => row[m] / row[i]);
+  };
+  let p = p0.slice(), lambda = 1e-2, prev = cost(p);
+  for (let iter = 0; iter < 300; iter++) {
+    const r = x.map((xi, i) => f(p, xi) - y[i]);
+    const J = x.map(() => new Array(m));
+    for (let j = 0; j < m; j++) {
+      const dp = Math.max(1e-6, Math.abs(p[j]) * 1e-6), pp = p.slice(); pp[j] += dp;
+      for (let i = 0; i < n; i++) J[i][j] = (f(pp, x[i]) - f(p, x[i])) / dp;
+    }
+    const JtJ = Array.from({ length: m }, () => new Array(m).fill(0)), Jtr = new Array(m).fill(0);
+    for (let i = 0; i < n; i++) for (let a = 0; a < m; a++) {
+      Jtr[a] += J[i][a] * r[i];
+      for (let b = 0; b < m; b++) JtJ[a][b] += J[i][a] * J[i][b];
+    }
+    const A = JtJ.map((row, i) => row.map((v, j) => v + (i === j ? lambda * v : 0)));
+    const step = solve(A, Jtr.map(v => -v));
+    const pn = p.map((v, i) => v + step[i]), c = cost(pn);
+    if (c < prev) { p = pn; lambda = Math.max(lambda * 0.7, 1e-9); if (prev - c < 1e-9) break; prev = c; }
+    else { lambda = Math.min(lambda * 2.5, 1e7); }
+  }
+  return p;   // [L, x0, k, b]
+}
+```
+
+```{ojs}
+//| echo: false
+defaultData = `10.0, 7
+14.0, 11.35
+16.5, 14.22
+18.0, 15.4
+22.0, 20.2
+23.0, 21.4
+23.5, 21.8
+24.0, 22.2
+25.0, 22.8
+26.5, 23.5
+27.3, 25.1
+27.4, 25.9
+28.0, 24.9
+28.5, 24.9
+29.0, 24.9
+29.7, 26.4
+31.0, 26.9
+32.0, 27.7
+32.7, 27.4
+33.0, 27.5`
+
+viewof rawData = Inputs.textarea({value: defaultData, rows: 12, label: "Data (age, weight)", spellcheck: false})
+viewof maxAge = Inputs.number({value: 52, min: 48, step: 1, label: "Max age (wks) to plot*"})
+```
+
+*The age to reach adult size varies between breeds — some as little as 6 months, others as many as 24!*
+
+```{ojs}
+//| echo: false
+points = rawData.trim().split("\n").map(line => {
+  const [a, w] = line.split(",").map(s => parseFloat(s.trim()));
+  return {x: a, y: w};
+}).filter(p => Number.isFinite(p.x) && Number.isFinite(p.y))
+
+fit = {
+  const x = points.map(p => p.x), y = points.map(p => p.y);
+  if (x.length < 4) return {adult: NaN, f: () => NaN};
+  const median = arr => { const s = [...arr].sort((a, b) => a - b); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+  const p0 = [Math.max(...y), median(x), 1, Math.min(...y)];   // [L, x0, k, b]
+  const [L, x0, k, b] = fitSigmoid(x, y, p0);
+  return {L, x0, k, b, adult: L + b, f: xv => L / (1 + Math.exp(-k * (xv - x0))) + b};
+}
+```
+
+```{ojs}
+//| echo: false
+{
+  const grid = Array.from({length: 120}, (_, i) => { const xv = i * maxAge / 119; return {x: xv, y: fit.f(xv)}; });
+  return Plot.plot({
+    width: 760, height: 420, marginLeft: 55,
+    x: {label: "Age (weeks)", domain: [0, maxAge]},
+    y: {label: "Weight (lbs)"},
+    marks: [
+      Plot.dot(points, {x: "x", y: "y", fill: "#1f77b4", r: 3}),
+      Plot.line(grid, {x: "x", y: "y", stroke: "#d62728"}),
+      Plot.ruleY([fit.adult], {stroke: "black", strokeDasharray: "4 3"}),
+      Plot.text([{x: maxAge, y: fit.adult}], {x: "x", y: "y", text: [`Adult weight = ${fit.adult.toFixed(1)} lbs`], dx: -70, dy: -8})
+    ]
+  });
+}
+```
+
+```{ojs}
+//| echo: false
+md`**Estimated adult weight: ${fit.adult.toFixed(1)} lbs.**`
+```

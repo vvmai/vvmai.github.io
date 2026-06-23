@@ -1,0 +1,31 @@
+---
+title: "Slim Jim percentage"
+---
+
+```{ojs}
+//| echo: false
+viewof sjCount = Inputs.number({
+  label: "Number of (full-sized) Slim Jims eaten today",
+  min: 0, step: 1, placeholder: "0"
+})
+viewof bodyWeight = Inputs.number({
+  label: "Body weight (lbs)",
+  min: 0, step: 1, placeholder: "0"
+})
+```
+
+```{ojs}
+//| echo: false
+{
+  if (!sjCount || !bodyWeight) return md`*Enter both values above.*`;
+  const sjLbs = sjCount * 0.060625;            // one full-sized Slim Jim ≈ 0.97 oz
+  const pct = sjLbs / (bodyWeight + sjLbs);
+  const comment =
+    pct <= 0.5 ? "You are within the safe range of Slim Jim consumption."
+    : pct <= 0.9 ? "Whoa, slow down, cowboy"
+    : "Be careful -- you are asymptotically approaching Slim Jim totality!";
+  return md`You are ~**${(100 * pct).toFixed(2)}%** Slim Jim.
+
+${comment}`;
+}
+```
