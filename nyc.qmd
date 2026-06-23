@@ -20,7 +20,6 @@ universally agreed to consist of three things:
 import plotly.express as px
 import plotly.io as pio
 import geopandas as gpd
-pio.templates.default = "plotly"
 
 from data_loaders import (
     get_nyc_geo, get_ridership, get_nyc_stations, get_nyc_lines,
@@ -31,6 +30,10 @@ from nyc_analysis import (
     calculate_station_ridership, calculate_combined_centrality,
     add_metric_to_hexgrid, normalize_metric,
 )
+
+# MUST come AFTER the imports above: importing data_loaders pulls in streamlit,
+# which sets Plotly's default template to a dark one (= black maps). Reset it.
+pio.templates.default = "plotly"
 
 H3_RESOLUTION = 9
 CENTRALITY_PERCENTILE = 0.95
