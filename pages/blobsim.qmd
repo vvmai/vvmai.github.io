@@ -6,10 +6,7 @@ execute:
   warning: false
 ---
 
-> _Scaffold — prose and interpretation to be filled in. The rules and base cases
-> below are defined from the design docs; charts and animations are from a real run._
-
-## What it is
+## BlobSim
 
 `blobsim` is a small world that runs on a grid. Each cell can hold one **blob** — a
 simple creature with an energy level. Step by step, every blob senses its
@@ -17,9 +14,14 @@ neighbours, picks an action (move, eat, reproduce, or rest), and pays for it in
 energy. Blobs that run out of energy die; well-fed ones reproduce. The grid itself
 holds energy that blobs eat, and that may or may not replenish over time.
 
+It starts from Conway's *Game of Life* — cells on a grid that live or die by their
+neighbours — and asks what happens when each cell becomes an individual that has to
+*earn its living*: carry energy, spend it to act, and starve if it can't. The result
+sits somewhere between a cellular automaton and a tiny ecology.
+
 <!-- TODO: what question this world is meant to explore. -->
 
-## How it is designed
+## Design
 
 The grid wraps around at the edges (a blob walking off the right side reappears on
 the left). Every step runs the same fixed sequence:
@@ -33,34 +35,24 @@ touching the rest.
 
 <!-- TODO: more on the sensing model and the action costs, in your words. -->
 
-## Inspiration
-
-It starts from Conway's *Game of Life* — cells on a grid that live or die by their
-neighbours — and asks what happens when each cell becomes an individual that has to
-*earn its living*: carry energy, spend it to act, and starve if it can't. The result
-sits somewhere between a cellular automaton and a tiny ecology.
-
 <!-- TODO: the personal hook — why this was worth building. -->
 
-## The rules it must obey
+## Universal laws
 
-Five properties hold at every step, by construction. They are what makes the world
-predictable enough to reason about:
-
-- **Energy is conserved.** At any moment, the energy held by living blobs, plus the
+- **Conservation of energy.** At any moment, the energy held by living blobs, plus the
   energy left in the grid, plus everything spent so far, equals what the world
   started with (plus anything the environment has since added). A running tally
   re-checks this equality every single step, so a bug that quietly leaks or invents
   energy cannot hide.
-- **It is deterministic.** The same starting seed reproduces the exact same run,
+- **Determinism.** The same starting seed reproduces the exact same run,
   step for step.
 - **One blob per cell.** No two blobs ever occupy the same square.
 - **Reproduction only moves energy.** A new blob is funded entirely out of its
   parent's energy; splitting never creates any.
-- **Death has a hard floor.** A blob whose energy falls to the death threshold is
+- **Death is permanent.** A blob whose energy falls to the death threshold is
   removed immediately; every surviving blob sits strictly above it.
 
-## See it run
+## Example
 
 A finite grid with no replenishment can only end one way — the blobs eat through the
 available energy and die out:
@@ -117,7 +109,7 @@ fig.update_layout(
 fig
 ```
 
-**How to read it.** The *population* line (left axis) counts living blobs; the *total
+The *population* line (left axis) counts living blobs; the *total
 energy* line (right axis) is the energy currently held by blobs and the grid together.
 The run opens with a boom — the grazers find food and multiply roughly tenfold in the
 first ~20 steps — which overshoots what the grid can feed. The crowd then draws energy
@@ -130,20 +122,16 @@ convergence to a carrying capacity.**
 
 <!-- TODO: add your own read if you want to emphasize something else. -->
 
-## Benchmarking is a precondition
+## Benchmark runs/base cases
 
-Everything in this section is **validation, not the end goal**. Before trusting the
-simulation on complicated scenarios — where the right answer isn't known in advance —
-it has to first reproduce the cases where the answer *is* known. Each base case below
+Each base case below
 computes a target *analytically from the rules* (a conservation identity, an expected
 lifespan, a stable population) and then checks the simulation lands on it within
 tolerance. Passing them all is a statistical precondition: evidence the engine is
 predictable and internally consistent, so that later, non-base-case results can be
 read as findings rather than bugs.
 
-## The base cases
-
-### A single blob's lifespan
+### Predicted lifespan
 
 **The rule.** A lone blob lives in two phases: an *active* phase where it can still
 afford to move (paying a higher average cost per step) and a *resting* phase, below
@@ -172,7 +160,7 @@ steps — and reproduction can't postpone it, because offspring are funded from 
 
 <!-- TODO. -->
 
-### Boom, then bust
+### Boom-bust cycle
 
 **The rule.** Give blobs a rich grid and they multiply fast — but the peak is capped
 by *space*, not energy: with one blob per cell, the population can't exceed the number
@@ -183,7 +171,7 @@ extinction.
 
 <!-- TODO: the overshoot → depletion → die-off mechanism. -->
 
-### A carrying capacity
+### Carrying capacity
 
 **The rule.** When the grid replenishes, the population settles where energy coming in
 balances energy spent. Equating the two gives a predicted stable size
@@ -211,7 +199,7 @@ there — steady, with essentially no variation.
 
 <!-- TODO. -->
 
-### The extinction threshold
+### Extinction threshold
 
 **The rule.** Whether a population survives hinges on how fast the grid replenishes.
 There is a **critical rate**: below it, each blob can't absorb enough to replace what
@@ -227,7 +215,7 @@ transition.
 
 <!-- TODO. -->
 
-### Grazers beat walkers
+### Grazers vs. walkers
 
 **The rule.** Put two strategies on one grid: undirected **random walkers** and
 **grazers** that move toward the richest neighbouring cell. With identical
@@ -238,16 +226,7 @@ take over. Greater efficiency compounds into dominance.
 
 <!-- TODO: what decides the margin / how fast displacement happens. -->
 
-## What this unlocks
-
-With the base cases reproduced and energy conserved throughout, the engine is
-trustworthy on scenarios that *can't* be solved by hand — multi-species mixes, richer
-environments, new behaviours — where a surprising result is a finding about the model,
-not a bug in it.
-
 <!-- TODO: which complex scenarios you actually want to explore next. -->
-
-## What I took away, in order
 
 <!-- TODO: ordered takeaways, e.g.
 1. Conservation is the backbone — every base case is ultimately energy bookkeeping.

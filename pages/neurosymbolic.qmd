@@ -6,11 +6,7 @@ execute:
   warning: false
 ---
 
-> _Scaffold — the introduction is condensed from my project notes; the findings
-> follow the order of discovery, and the charts are seeded from the real run.
-> Deeper interpretation still to be filled in._
-
-## The idea
+## Thesis
 
 A prediction market sells **contracts** that pay \$1 if a stated thing happens and
 \$0 if it doesn't, so a contract's price acts like the crowd's estimate of the
@@ -29,14 +25,10 @@ trading faster.
 
 <!-- TODO: your framing / why this caught your interest. -->
 
-## Why it's possible only now
-
 Two things had to arrive together: **markets that trade yes/no claims** (logic needs
 true/false statements to work on), and **cheap reading of dense legal text** (turning
 exception-riddled fine print into clean structure used to take a human per contract;
 language models made it cheap at scale).
-
-## Why deduction, not prediction
 
 **Induction** learns patterns from data ("it went up the last ten times") — what
 essentially all quantitative trading does. **Deduction** proves something *must*
@@ -53,7 +45,7 @@ provably-correct answer goes to the solver.
 
 <!-- TODO. -->
 
-## How the machinery works
+## Strategy
 
 The expensive step — carefully reading a rulebook, turning it into logic, checking it
 with the solver — is spent only on promising candidates, picked out by cheap filters
@@ -81,7 +73,7 @@ discovery pays off.
 
 <!-- TODO: anything you want to draw out about the architecture. -->
 
-## What a usable opportunity must look like
+## The golden case
 
 The relationship has to be **forced by the rulebooks** (not the casual descriptions),
 **true no matter how the world turns out**, **hidden across contracts** (visible only
@@ -91,18 +83,9 @@ once. Conditions about history, outside copies, and the crowd all collapse into 
 question: **does anyone already watch this relationship here?** If yes, it's priced.
 So the target is one *nobody* watches — which makes any such opportunity temporary.
 
-## The rule of thumb that emerged
-
-> The logic breaks when a contract resolves on a **continuous number** (a vote share,
-> an inflation reading) and holds when it resolves on a **yes/no event** (a law passed,
-> a person appointed).
-
-So economics and elections (number-based) look dead; legal and political events
-(yes/no) are the promising ground.
-
 <!-- TODO: why a continuous strike destroys the forced link. -->
 
-## Results, in order of discovery
+## Findings
 
 ### 1. Single contracts — dead end
 
@@ -210,7 +193,7 @@ different crowds.*
 
 <!-- TODO. -->
 
-### 7. The best find — and the fee that killed it
+### 7. The life and death of a real arbitrage
 
 The strongest find: a **bundled bet on which party wins the House Speakership** equals
 a **direct bet on which party controls the House**, split into the two cases of who
@@ -234,12 +217,7 @@ trade it) or merely slow to update (a speed edge, not a logic edge).
 <!-- TODO: the careful conclusion — real mispricings exist, but the profitable middle
 is squeezed from both sides. -->
 
-## Summary — everything the search turned up
-
-No single trade cleared every bar, but the search produced a set of reusable results
-about *where* a logic edge can and cannot live. Collected here, with how each was
-found and why it holds.
-
+## Summary
 ### The golden rules
 
 - **Continuous number vs. yes/no — the master heuristic.** A forced link between
@@ -265,11 +243,6 @@ found and why it holds.
 
 ### Where the edge is, and isn't
 
-- **Single-contract fine-print gaps: dead.** In a 20-contract sample ~half had a
-  headline-vs-rulebook gap, but **0 were tradeable** — shallow reading isn't scarce, so
-  any such gap is already priced.
-- **Literal same-number matches across families: ~nonexistent** (a 165-contract scan
-  found essentially none; most "matches" merely cite the same news source). Not a blow
   — the real target is a *definitional link between different measurements*, which by
   construction won't appear in a search for identical ones.
 - **Native politics/legal is the fertile ground.** The surface-feature score ranked
@@ -285,7 +258,6 @@ found and why it holds.
   (company-framed vs. model-framed off one leaderboard) failed because the *same* crowd
   traded both framings — different labels, one blind spot, no edge.
 
-### The one concrete proof, and the wall it hit
 
 - **A real Kalshi-native mispricing exists.** The House-Speakership bundle equals
   House-control split by Senate control — logically forced, decided by one authority,
@@ -298,23 +270,7 @@ found and why it holds.
   either barely traded (you can't actually trade it) or merely slow to update (a speed
   edge, not a logic edge). **The profitable middle is squeezed from both sides.**
 
-### The machinery itself
 
-- **Division of labor.** The language model only does the fuzzy work (reading and
-  translating rulebooks); everything provable goes to a solver (Z3). A required
-  **grounding** label on each claimed link makes "merely true about the world" links
-  impossible to write down and checks the resolver is obligated to honor the link at
-  payout. The **force score** counts how many joint outcomes a contract rules out — a
-  set-level measure that catches three-way links a pairwise scan would miss.
-- **Verified end-to-end** on known-answer cases (logic engine 29/29, link-finder
-  recovers every built-in link, mispricing checker 0 false alarms on 10 correctly-priced
-  links, cross-series matcher re-finds recession ↔ GDP). The one risk not yet measured
-  at scale is **translation faithfulness** — whether the model's rulebook→logic
-  conversion matches the legal text.
-
-> **Conclusion: can't quit my day job (yet).** The tools work and Kalshi-native
-> logical mispricings provably exist — but none found so far is capturable, each dying
-> to a known cause: an outside copy, a continuous strike, a shared crowd, an untraded
-> leg, or fees larger than the gap.
+**Conclusion:** can't quit my day job
 
 <!-- TODO: add/curate the insights you most want to highlight, and your call on next steps. -->
