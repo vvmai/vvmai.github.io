@@ -117,7 +117,18 @@ fig.update_layout(
 fig
 ```
 
-<!-- TODO: read off the population dynamics. -->
+**How to read it.** The *population* line (left axis) counts living blobs; the *total
+energy* line (right axis) is the energy currently held by blobs and the grid together.
+The run opens with a boom — the grazers find food and multiply roughly tenfold in the
+first ~20 steps — which overshoots what the grid can feed. The crowd then draws energy
+down faster than it regenerates, so the energy line sags and the population crashes
+back. From there the two lines settle into damped, out-of-phase swings (a population
+peak drains energy → the shortage starves the next generation → energy recovers →
+repeat), converging toward a steady level — here ~125 blobs — that the regenerating
+grid can sustain indefinitely. The shape to take away: **overshoot → correction →
+convergence to a carrying capacity.**
+
+<!-- TODO: add your own read if you want to emphasize something else. -->
 
 ## Benchmarking is a precondition
 
