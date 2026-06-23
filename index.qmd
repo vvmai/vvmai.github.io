@@ -3,7 +3,7 @@ title: "Hi — I'm Vương."
 pagetitle: "brainvomit — Vương"
 ---
 
-![](photos/IMG_0830.jpg)
+![](/assets/photos/IMG_0830.jpg)
 
 I'm a prolific producer of abandoned projects. This is my attempt to commit to at
 least some of them. Each page you see is a win against procrastination! 🌸

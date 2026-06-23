@@ -1,12 +1,15 @@
 project:
   type: website
   output-dir: _site
+  # Pages live in pages/ but read project-root paths (analysis/, data/, assets/),
+  # so run every doc from the project root.
+  execute-dir: project
   resources:
-    - hexes.geojson   # shared hex geometry the NYC maps fetch by URL
+    - assets/hexes.geojson   # shared hex geometry the NYC maps fetch by URL
 
 website:
   title: "brainvomit"
-  favicon: photos/IMG_0830.jpg
+  favicon: assets/photos/IMG_0830.jpg
   search:
     location: sidebar
     type: textbox
@@ -17,23 +20,23 @@ website:
       - text: "About"
         href: index.qmd
       - text: "Puppy weight calculator"
-        href: puppy.qmd
+        href: pages/puppy.qmd
       - text: "Slim Jim percentage"
-        href: slim-jim.qmd
+        href: pages/slim-jim.qmd
       - text: "Plotting my next move"
-        href: nyc.qmd
+        href: pages/nyc.qmd
       - text: "Is grad school worth it?"
-        href: grad-school.qmd
-      - text: "blobsim: a world of blobs"
-        href: blobsim.qmd
-      - text: "Arbitrage in prediction markets"
-        href: neurosymbolic.qmd
+        href: pages/grad-school.qmd
+      - text: "Conway's Blobs"
+        href: pages/blobsim.qmd
+      - text: "Neurosymbolic solver"
+        href: pages/neurosymbolic.qmd
 
 format:
   html:
-    theme: brite.scss
+    theme: assets/brite.scss
 
-# Heavy Python cells (the NYC analysis) execute locally once; outputs are cached
-# in _freeze/ and committed, so CI deploys without geopandas or the raw data.
 execute:
+  # Heavy Python cells (NYC, blobsim) execute locally once; outputs cached in
+  # _freeze/ (committed) so CI deploys without geopandas/blobsim or the raw data.
   freeze: auto

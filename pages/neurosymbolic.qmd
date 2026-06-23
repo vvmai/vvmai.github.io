@@ -1,5 +1,5 @@
 ---
-title: "Hunting logical arbitrage in prediction markets"
+title: "Neurosymbolic solver for deductive trading"
 jupyter: brainvomit
 execute:
   echo: false

@@ -1,0 +1,270 @@
+---
+title: "Conway's Blobs"
+jupyter: brainvomit
+execute:
+  echo: false
+  warning: false
+---
+
+> _Scaffold — prose and interpretation to be filled in. The rules and base cases
+> below are defined from the design docs; charts and animations are from a real run._
+
+## What it is
+
+`blobsim` is a small world that runs on a grid. Each cell can hold one **blob** — a
+simple creature with an energy level. Step by step, every blob senses its
+neighbours, picks an action (move, eat, reproduce, or rest), and pays for it in
+energy. Blobs that run out of energy die; well-fed ones reproduce. The grid itself
+holds energy that blobs eat, and that may or may not replenish over time.
+
+<!-- TODO: what question this world is meant to explore. -->
+
+## How it is designed
+
+The grid wraps around at the edges (a blob walking off the right side reappears on
+the left). Every step runs the same fixed sequence:
+
+> observe → decide → resolve who-goes-where → charge energy → act → absorb from the
+> grid → update the environment → remove the dead → record
+
+The behaviour of a blob ("rules"), the behaviour of the environment (decaying vs.
+replenishing), and how movement conflicts are settled are each swappable without
+touching the rest.
+
+<!-- TODO: more on the sensing model and the action costs, in your words. -->
+
+## Inspiration
+
+It starts from Conway's *Game of Life* — cells on a grid that live or die by their
+neighbours — and asks what happens when each cell becomes an individual that has to
+*earn its living*: carry energy, spend it to act, and starve if it can't. The result
+sits somewhere between a cellular automaton and a tiny ecology.
+
+<!-- TODO: the personal hook — why this was worth building. -->
+
+## The rules it must obey
+
+Five properties hold at every step, by construction. They are what makes the world
+predictable enough to reason about:
+
+- **Energy is conserved.** At any moment, the energy held by living blobs, plus the
+  energy left in the grid, plus everything spent so far, equals what the world
+  started with (plus anything the environment has since added). A running tally
+  re-checks this equality every single step, so a bug that quietly leaks or invents
+  energy cannot hide.
+- **It is deterministic.** The same starting seed reproduces the exact same run,
+  step for step.
+- **One blob per cell.** No two blobs ever occupy the same square.
+- **Reproduction only moves energy.** A new blob is funded entirely out of its
+  parent's energy; splitting never creates any.
+- **Death has a hard floor.** A blob whose energy falls to the death threshold is
+  removed immediately; every surviving blob sits strictly above it.
+
+## See it run
+
+A finite grid with no replenishment can only end one way — the blobs eat through the
+available energy and die out:
+
+![Two kinds of blob draw down a finite grid until none are left.](/assets/images/blobsim/sc1_decay_extinction.gif)
+
+One run's population and total energy over time:
+
+```{python}
+#| label: setup
+import sys
+sys.path.insert(0, "analysis")   # dev-only data (gitignored)
+import json
+import pandas as pd
+import plotly.io as pio
+import plotly.express as px
+import plotly.graph_objects as go
+pio.templates.default = "plotly"
+
+import blobsim
+```
+
+```{python}
+#| label: live-sim
+from blobsim import (
+    Simulation, SimulationConfig, SpeciesConfig, BlobAttributes,
+    RegeneratingEnvironment, ActionType, SensingLevel, MOORE,
+)
+from blobsim.species import GrazerRules
+
+attrs = BlobAttributes.create(
+    species="grazer", max_energy=10.0, offspring_energy=3.0,
+    reproduction_threshold=7.0, base_metabolic_cost=0.1, move_cost=0.2,
+    reproduce_cost=0.5, observation_radius=1, sensing_level=SensingLevel.BASIC,
+    allowed_actions=frozenset(ActionType), allowed_directions=MOORE,
+)
+config = SimulationConfig(
+    grid_size=30,
+    environment=RegeneratingEnvironment(rate=0.05, capacity=2.0, initial_cell_energy=1.0),
+    species=[SpeciesConfig(rules_factory=GrazerRules, attributes=attrs, count=25, initial_energy=5.0)],
+    seed=42,
+)
+sim = Simulation(config)
+traj = pd.DataFrame([
+    {"step": s.step, "population": s.n_alive, "total_energy": s.e_blobs + s.e_grid}
+    for s in sim.iterate(steps=200)
+])
+
+fig = go.Figure()
+fig.add_scatter(x=traj.step, y=traj.population, name="population", yaxis="y1")
+fig.add_scatter(x=traj.step, y=traj.total_energy, name="total energy (blobs + grid)", yaxis="y2")
+fig.update_layout(
+    height=380, margin=dict(l=0, r=0, t=10, b=0), xaxis_title="step",
+    yaxis=dict(title="population"),
+    yaxis2=dict(title="energy", overlaying="y", side="right", showgrid=False),
+    legend=dict(orientation="h", y=1.12),
+)
+fig
+```
+
+<!-- TODO: read off the population dynamics. -->
+
+## Benchmarking is a precondition
+
+Everything in this section is **validation, not the end goal**. Before trusting the
+simulation on complicated scenarios — where the right answer isn't known in advance —
+it has to first reproduce the cases where the answer *is* known. Each base case below
+computes a target *analytically from the rules* (a conservation identity, an expected
+lifespan, a stable population) and then checks the simulation lands on it within
+tolerance. Passing them all is a statistical precondition: evidence the engine is
+predictable and internally consistent, so that later, non-base-case results can be
+read as findings rather than bugs.
+
+```{python}
+#| label: bench-table
+LABELS = {
+    "B2a": "Single-blob mean lifespan",
+    "SC-1": "Guaranteed extinction on a finite grid",
+    "SC-4": "Boom then bust",
+    "SC-5": "Carrying capacity",
+    "SC-6": "Energy steady-state",
+}
+res = json.load(open("analysis/blobsim/benchmark_results.json"))
+df = pd.DataFrame(res["results"])
+df["check"] = df["id"].map(LABELS).fillna(df["id"])
+df[["check", "predicted", "observed_mean", "tolerance", "passed"]]
+```
+
+```{python}
+#| label: bench-chart
+num = df.dropna(subset=["predicted", "observed_mean"])
+fig = go.Figure()
+fig.add_bar(x=num.check, y=num.predicted, name="predicted")
+fig.add_bar(x=num.check, y=num.observed_mean, name="observed")
+fig.update_layout(barmode="group", height=340, margin=dict(l=0, r=0, t=10, b=0),
+                  legend=dict(orientation="h", y=1.15), yaxis_title="value")
+fig
+```
+
+<!-- TODO: comment on how closely observation tracks prediction overall. -->
+
+## The base cases
+
+### A single blob's lifespan
+
+**The rule.** With a positive move cost, a lone blob lives in two phases: while it
+has enough energy it wanders (paying a higher average cost per step), and once it
+drops below that level it can only rest at a fixed cost until it starves. Summing the
+two phases predicts an average lifespan of about **186 steps**; the run observed
+185.9.
+
+<!-- TODO: why the two-phase split, in your words. -->
+
+### Guaranteed extinction on a finite grid
+
+**The rule.** If the environment adds no energy, then every step at least some energy
+is spent and never returned, so the world's total can only fall. With a finite
+starting amount, every blob must therefore die within a bounded number of steps — and
+reproduction can't save them, because offspring are funded from parents (energy only
+moves, it isn't created). The animation above shows exactly this.
+
+<!-- TODO. -->
+
+### Boom, then bust
+
+**The rule.** Give blobs a rich grid and they multiply fast — but the peak is capped
+by *space*, not energy: with one blob per cell, the population can't exceed the number
+of cells. Once it fills the grid and the food is drawn down, it collapses to
+extinction.
+
+![A population explodes to fill the grid, then crashes.](/assets/images/blobsim/sc4_boom_bust.gif)
+
+<!-- TODO: the overshoot → depletion → die-off mechanism. -->
+
+### A carrying capacity
+
+**The rule.** When the grid replenishes, the population settles where energy coming in
+balances energy spent. Equating the two gives a predicted stable size
+
+$$N^* \approx \frac{\text{rate}\times(\text{cells})}{\text{rate} + \text{avg cost per blob}} \approx 106.$$
+
+Starting from very crowded and very sparse, both runs converge to roughly the same
+level — evidence it's a genuine attractor, not an artifact of where you start.
+
+::: {layout-ncol=2}
+![Sparse start — grows toward the steady level.](/assets/images/blobsim/sc5_sparse.gif)
+
+![Crowded start — relaxes down to the same level.](/assets/images/blobsim/sc5_dense.gif)
+:::
+
+<!-- TODO: the surprise — observed settles ~25% above the prediction, because the
+mean-field math assumes blobs are well-mixed; real blobs cluster and spread out, so
+fewer of their moves collide and get wasted. -->
+
+### A lone blob's energy
+
+**The rule.** A single blob on a fast-replenishing grid absorbs more each step than it
+spends, so its energy climbs quickly to the maximum it can hold and then stays pinned
+there — steady, with essentially no variation.
+
+<!-- TODO. -->
+
+### The extinction threshold
+
+**The rule.** Whether a population survives hinges on how fast the grid replenishes.
+There is a **critical rate**: below it, each blob can't absorb enough to replace what
+it spends, so on average it leaves fewer than one surviving offspring and the line
+dies out; above it, survival becomes possible. The crossover is sharp — a phase
+transition.
+
+::: {layout-ncol=2}
+![Below the critical rate — the population dies out.](/assets/images/blobsim/c2_extinction.gif)
+
+![Above the critical rate — the population survives.](/assets/images/blobsim/c2_survival.gif)
+:::
+
+<!-- TODO. -->
+
+### Grazers beat walkers
+
+**The rule.** Put two strategies on one grid: undirected **random walkers** and
+**grazers** that move toward the richest neighbouring cell. With identical
+metabolism, the grazers absorb more per step, so they reproduce faster and eventually
+take over. Greater efficiency compounds into dominance.
+
+![Energy-seeking grazers outcompete random walkers.](/assets/images/blobsim/c3_competition.gif)
+
+<!-- TODO: what decides the margin / how fast displacement happens. -->
+
+## What this unlocks
+
+With the base cases reproduced and energy conserved throughout, the engine is
+trustworthy on scenarios that *can't* be solved by hand — multi-species mixes, richer
+environments, new behaviours — where a surprising result is a finding about the model,
+not a bug in it.
+
+<!-- TODO: which complex scenarios you actually want to explore next. -->
+
+## What I took away, in order
+
+<!-- TODO: ordered takeaways, e.g.
+1. Conservation is the backbone — every base case is ultimately energy bookkeeping.
+2. On a finite grid, extinction is guaranteed; reproduction only moves energy around.
+3. Crowding (one-per-cell), not total energy, caps the population at its peak.
+4. Survival has a sharp threshold in the replenishment rate.
+5. The simplest population prediction runs ~25% low because it over-counts collisions.
+-->

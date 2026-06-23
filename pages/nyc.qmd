@@ -42,7 +42,8 @@ H3_RESOLUTION = 9
 CENTRALITY_PERCENTILE = 0.95
 
 
-GEOJSON_URL = "hexes.geojson"   # written once below; all 4 maps reference it
+GEOJSON_PATH = "assets/hexes.geojson"   # filesystem path, written once at render (from project root)
+GEOJSON_URL = "/assets/hexes.geojson"   # URL the browser fetches; all 4 maps share it
 
 
 def choropleth(X, color_col, color_scale="Plasma"):
@@ -135,7 +136,7 @@ X['geometry'] = shapely.set_precision(X.geometry.values, grid_size=1e-5)
 # properties so featureidkey="properties.id" matches each map's locations).
 _geo = X[['geometry']].copy()
 _geo['id'] = _geo.index.astype(str)
-with open(GEOJSON_URL, 'w') as _f:
+with open(GEOJSON_PATH, 'w') as _f:
     _f.write(_geo.to_json())
 
 station_centrality.rename(columns={'station_name': 'Station Name',

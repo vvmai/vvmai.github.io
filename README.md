@@ -8,9 +8,9 @@ plain file, so pages load instantly and there is nothing to run server-side.
 ## Contents
 
 - [How a page works](#how-a-page-works)
-- [Files](#files)
+- [Layout](#layout)
 - [Edit and preview locally](#edit-and-preview-locally)
-- [The NYC page (Python + freeze)](#the-nyc-page-python--freeze)
+- [The Python pages (freeze)](#the-python-pages-freeze)
 - [Deployment](#deployment)
 
 ## How a page works
@@ -19,25 +19,31 @@ Each page is a `.qmd` file (Quarto Markdown: Markdown plus optional code cells).
 `quarto render` converts every `.qmd` into an HTML page under `_site/`. Three
 kinds of page appear here:
 
-- **Static** (e.g. `index.qmd`) — prose and images only.
-- **Interactive** (`slim-jim.qmd`, `grad-school.qmd`, `puppy.qmd`) — use **OJS**
-  (Observable JavaScript), Quarto's built-in reactive JS. Inputs and charts run in
-  the visitor's browser; no Python or server is involved. The puppy page fits a
-  sigmoid to editable data using a Levenberg–Marquardt routine written inline in
-  JS, so it has no external library dependency.
-- **Python** (`nyc.qmd`) — see [below](#the-nyc-page-python--freeze).
+- **Static** (`index.qmd`) — prose and images only.
+- **Interactive** (`pages/slim-jim.qmd`, `pages/grad-school.qmd`, `pages/puppy.qmd`)
+  — use **OJS** (Observable JavaScript), Quarto's built-in reactive JS. Inputs and
+  charts run in the visitor's browser; no Python or server is involved. The puppy
+  page fits a sigmoid to editable data using a Levenberg–Marquardt routine written
+  inline in JS, so it has no external library dependency.
+- **Python** (`pages/nyc.qmd`, `pages/blobsim.qmd`, `pages/neurosymbolic.qmd`) —
+  see [below](#the-python-pages-freeze).
 
-## Files
+## Layout
 
 | Path | Purpose | Tracked? |
 | ---- | ------- | -------- |
-| `*.qmd` | the pages | yes |
-| `_quarto.yml` | site config: title, sidebar/nav, theme (`brite`) | yes |
-| `_freeze/` | cached outputs of `nyc.qmd`'s Python cells | yes (required — see below) |
-| `photos/` | images | yes |
+| `index.qmd` | home page (About) | yes |
+| `pages/*.qmd` | the rest of the pages | yes |
+| `assets/` | `brite.scss` theme, `photos/`, `images/`, `hexes.geojson` | yes |
+| `_quarto.yml` | site config: nav, theme, `execute-dir: project` | yes |
+| `_freeze/` | cached outputs of the Python pages | yes (required — see below) |
 | `.github/workflows/deploy.yml` | build + deploy on push to `main` | yes |
-| `analysis/` | NYC analysis helpers; used only to refresh `_freeze/` | no (gitignored, local-only) |
-| `data/` | raw NYC datasets, ~44 MB; inputs to the analysis only | no (gitignored, local-only) |
+| `analysis/` | analysis helpers + input JSONs; only to refresh `_freeze/` | no (gitignored, local) |
+| `data/` | raw NYC datasets, ~44 MB; inputs to the analysis only | no (gitignored, local) |
+
+Pages live in `pages/` but read project-root paths (`analysis/`, `data/`,
+`assets/`), so `_quarto.yml` sets `execute-dir: project` to run every doc from the
+repo root. Assets are referenced as `/assets/...` (root-relative).
 
 ## Edit and preview locally
 
@@ -49,7 +55,7 @@ quarto preview                                        # serves with live reload
 Saving a `.qmd` re-renders it automatically. To add a page: create `foo.qmd` and
 add one entry under `website.sidebar.contents` in `_quarto.yml`.
 
-## The NYC page (Python + freeze)
+## The Python pages (freeze)
 
 `nyc.qmd` runs a geospatial analysis (geopandas, networkx, contextily, h3) whose
 dependencies and ~44 MB of data are too heavy to install in CI. Quarto's **freeze**
