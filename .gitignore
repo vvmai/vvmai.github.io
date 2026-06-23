@@ -35,6 +35,10 @@ Thumbs.db
 _site/
 .playwright-mcp/
 
+# Not needed to render the Pages site (kept locally to regenerate assets/maps/)
+/data/
+/prerender/
+
 # Data (optional - uncomment if you want to exclude large data files)
 # data/*.csv
 # data/*.geojson

@@ -7,8 +7,8 @@
       // SPA deep-link fix (rafgraph/spa-github-pages): encode the path into a
       // query string and bounce to the app root, which decodes it back. Lets a
       // refreshed/bookmarked sub-page restore that exact page.
-      // pathSegmentsToKeep=1 keeps the /<repo>/ project-pages prefix.
-      var pathSegmentsToKeep = 1;
+      // User page (vvmai.github.io) serves at root, so keep 0 path segments.
+      var pathSegmentsToKeep = 0;
       var l = window.location;
       l.replace(
         l.protocol + "//" + l.hostname + (l.port ? ":" + l.port : "") +
