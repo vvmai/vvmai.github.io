@@ -1,0 +1,79 @@
+---
+title: "Quick maths"
+---
+
+A couple of one-formula calculators.
+
+## Slim Jim percentage
+
+What fraction of your body weight is Slim Jim, right now?
+
+```{ojs}
+//| echo: false
+viewof sjCount = Inputs.number({
+  label: "Number of (full-sized) Slim Jims eaten today",
+  min: 0, step: 1, placeholder: "0"
+})
+viewof bodyWeight = Inputs.number({
+  label: "Body weight (lbs)",
+  min: 0, step: 1, placeholder: "0"
+})
+```
+
+```{ojs}
+//| echo: false
+{
+  if (!sjCount || !bodyWeight) return md`*Enter both values above.*`;
+  const sjLbs = sjCount * 0.060625;            // one full-sized Slim Jim ≈ 0.97 oz
+  const pct = sjLbs / (bodyWeight + sjLbs);
+  const comment =
+    pct <= 0.5 ? "You are within the safe range of Slim Jim consumption."
+    : pct <= 0.9 ? "Whoa, slow down, cowboy"
+    : "Be careful -- you are asymptotically approaching Slim Jim totality!";
+  return md`You are ~**${(100 * pct).toFixed(2)}%** Slim Jim.
+
+${comment}`;
+}
+```
+
+## Conscious lifespan vs. sleep tradeoff
+
+How much *waking* life you have left, and what each hour of sleep trades away.
+Eight hours a night is the baseline; sleep more and your conscious years shrink,
+sleep less and they grow.
+
+```{ojs}
+//| echo: false
+viewof currentAge = Inputs.number({label: "Current age (yr)", min: 0, step: 1, value: 23})
+viewof projectedLifespan = Inputs.number({label: "Projected lifespan (yr)", min: 0, step: 1, value: 80})
+viewof sleepHours = Inputs.number({label: "Sleep per night (hr)", min: 0, max: 24, step: 0.5, value: 8})
+```
+
+```{ojs}
+//| echo: false
+{
+  const remaining = projectedLifespan - currentAge;
+  if (!(remaining > 0)) return md`*Projected lifespan should be greater than current age.*`;
+  if (!(sleepHours >= 0 && sleepHours < 24)) return md`*Sleep must be between 0 and 24 hours.*`;
+
+  const conscious = remaining * (24 - sleepHours) / 24;      // waking years left
+  const baseline  = remaining * (24 - 8) / 24;               // at 8 h/night
+  const delta     = conscious - baseline;                    // + gained, − lost vs 8h
+
+  const compared = sleepHours === 8
+    ? "That's exactly the 8 h/night baseline."
+    : `Versus the 8 h/night baseline, you ${delta >= 0 ? "**gain**" : "**lose**"} ` +
+      `**${Math.abs(delta).toFixed(1)} conscious years** by sleeping ` +
+      `${sleepHours > 8 ? "more" : "less"}.`;
+
+  return md`Of your **${remaining.toFixed(0)}** remaining years, about
+**${conscious.toFixed(1)}** are spent awake.
+
+${compared}`;
+}
+```
+
+::: {.callout-note}
+Assumes all else equal — in particular that your lifespan doesn't change with how
+much you sleep. (In reality it does; this is a toy.)
+:::

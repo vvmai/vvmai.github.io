@@ -50,8 +50,8 @@ website:
           contents:
             - text: "Puppy weight predictor"
               href: pages/puppy.qmd
-            - text: "Slim Jim percentage"
-              href: pages/slim-jim.qmd
+            - text: "Quick maths"
+              href: pages/quick-maths.qmd
             - text: "Is grad school worth it?"
               href: pages/grad-school.qmd
     - title: "Art"
