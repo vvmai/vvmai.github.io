@@ -30,6 +30,7 @@ Thumbs.db
 !photos/*.png
 !data/*.png
 !assets/**/*.png
+!_freeze/**/*.png   # frozen matplotlib figures must be committed for CI
 
 # Build output
 _site/
