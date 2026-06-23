@@ -1,0 +1,18 @@
+[    1818ms] [LOG] Loading micropip, packaging @ https://cdn.jsdelivr.net/pyodide/v0.27.6/full/pyodide.asm.js:9
+[    1891ms] [LOG] Loaded micropip, packaging @ https://cdn.jsdelivr.net/pyodide/v0.27.6/full/pyodide.asm.js:9
+[    2299ms] [LOG] No new packages to load @ https://cdn.jsdelivr.net/pyodide/v0.27.6/full/pyodide.asm.js:9
+[    2466ms] [LOG] packaging already loaded from default channel @ https://cdn.jsdelivr.net/pyodide/v0.27.6/full/pyodide.asm.js:9
+[    2466ms] [LOG] Loading Jinja2, MarkupSafe, Pillow, altair, attrs, cachetools, contourpy, cramjam, cycler, fastparquet, fonttools, fsspec, jsonschema, jsonschema_specifications, kiwisolver, matplotlib, matplotlib-pyodide, narwhals, numpy, openblas, pandas, protobuf, pyodide-http, pyparsing, pyrsistent, python-dateutil, pytz, referencing, rpds-py, scipy, shapely, six, typing-extensions @ https://cdn.jsdelivr.net/pyodide/v0.27.6/full/pyodide.asm.js:9
+[    3874ms] [LOG] Loaded Jinja2, MarkupSafe, Pillow, altair, attrs, cachetools, contourpy, cramjam, cycler, fastparquet, fonttools, fsspec, jsonschema, jsonschema_specifications, kiwisolver, matplotlib, matplotlib-pyodide, narwhals, numpy, openblas, pandas, protobuf, pyodide-http, pyparsing, pyrsistent, python-dateutil, pytz, referencing, rpds-py, scipy, shapely, six, typing-extensions @ https://cdn.jsdelivr.net/pyodide/v0.27.6/full/pyodide.asm.js:9
+[   43019ms] [WARNING] Unrecognized feature: 'ambient-light-sensor'. @ https://cdn.jsdelivr.net/npm/@stlite/browser@0.85.1/build/index-Bvr2cV99.js:0
+[   43019ms] [WARNING] Unrecognized feature: 'battery'. @ https://cdn.jsdelivr.net/npm/@stlite/browser@0.85.1/build/index-Bvr2cV99.js:0
+[   43019ms] [WARNING] Unrecognized feature: 'document-domain'. @ https://cdn.jsdelivr.net/npm/@stlite/browser@0.85.1/build/index-Bvr2cV99.js:0
+[   43019ms] [WARNING] Unrecognized feature: 'layout-animations'. @ https://cdn.jsdelivr.net/npm/@stlite/browser@0.85.1/build/index-Bvr2cV99.js:0
+[   43019ms] [WARNING] Unrecognized feature: 'legacy-image-formats'. @ https://cdn.jsdelivr.net/npm/@stlite/browser@0.85.1/build/index-Bvr2cV99.js:0
+[   43019ms] [WARNING] Unrecognized feature: 'oversized-images'. @ https://cdn.jsdelivr.net/npm/@stlite/browser@0.85.1/build/index-Bvr2cV99.js:0
+[   43019ms] [WARNING] Unrecognized feature: 'vr'. @ https://cdn.jsdelivr.net/npm/@stlite/browser@0.85.1/build/index-Bvr2cV99.js:0
+[   43019ms] [WARNING] Unrecognized feature: 'wake-lock'. @ https://cdn.jsdelivr.net/npm/@stlite/browser@0.85.1/build/index-Bvr2cV99.js:0
+[   43043ms] [WARNING] An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing. @ about:srcdoc:0
+[   43253ms] [WARNING] An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing. @ about:srcdoc:0
+[   43275ms] [WARNING] An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing. @ about:srcdoc:0
+[   43297ms] [WARNING] An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing. @ about:srcdoc:0

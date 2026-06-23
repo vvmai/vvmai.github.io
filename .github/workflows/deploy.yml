@@ -1,0 +1,55 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Allow the workflow to publish to Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One concurrent deployment; don't cancel an in-progress run.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assemble static site
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          # SPA fallback: GitHub Pages serves 404.html for any unresolved path
+          # (e.g. a refreshed/bookmarked sub-page). It boots the same app, which
+          # then routes client-side from the URL.
+          cp index.html _site/404.html
+          cp app.py About.py utils.py _site/
+          mkdir -p _site/.streamlit
+          cp .streamlit/config.toml _site/.streamlit/
+          cp -r pages _site/pages
+          cp -r photos _site/photos
+          mkdir -p _site/assets
+          cp -r assets/maps _site/assets/maps
+          # Pages serves the artifact verbatim; no Jekyll processing.
+          touch _site/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

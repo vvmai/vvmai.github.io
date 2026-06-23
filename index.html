@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>brainvomit — Vương</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/browser@0.85.1/build/stlite.css" />
+    <style>
+      html, body { margin: 0; }
+      #root { height: 100vh; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      import { mount } from "https://cdn.jsdelivr.net/npm/@stlite/browser@0.85.1/build/stlite.js";
+
+      // Every file the app needs in the in-browser (Pyodide) filesystem.
+      // Keys are the FS paths the Python code references; values are fetched
+      // from the deployed site. Paths are URL-encoded per segment so names
+      // with spaces and "?" resolve correctly.
+      const paths = [
+        "app.py",
+        "About.py",
+        "utils.py",
+        ".streamlit/config.toml",
+        "pages/Puppy weight calculator.py",
+        "pages/Slim Jim percentage.py",
+        "pages/Plotting my next move.py",
+        "pages/Is grad school worth it?.py",
+        "photos/IMG_0830.jpg",
+        "photos/baby_pippy.png",
+        "photos/teen_pip.png",
+        "photos/old_pippy.png",
+        "assets/maps/nyc_mta_network.png",
+        "assets/maps/station_centrality.csv",
+        "assets/maps/centrality.html",
+        "assets/maps/trees.html",
+        "assets/maps/restaurants.html",
+        "assets/maps/overall.html",
+      ];
+
+      const files = {};
+      for (const p of paths) {
+        const url = "./" + p.split("/").map(encodeURIComponent).join("/");
+        files[p] = { url };
+      }
+
+      mount(
+        {
+          entrypoint: "app.py",
+          requirements: ["pandas", "numpy", "scipy", "matplotlib", "shapely"],
+          files,
+          streamlitConfig: { "client.toolbarMode": "viewer" },
+        },
+        document.getElementById("root"),
+      );
+    </script>
+  </body>
+</html>

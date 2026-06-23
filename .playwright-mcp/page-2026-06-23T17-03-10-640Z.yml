@@ -1,0 +1,42 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - button [ref=e17] [cursor=pointer]:
+        - img [ref=e18]
+    - generic [ref=e6]:
+      - button [ref=e23] [cursor=pointer]:
+        - img [ref=e24]
+      - list [ref=e31]:
+        - listitem [ref=e32]:
+          - link "About" [ref=e34] [cursor=pointer]:
+            - /url: http://stlite.invalid:8731/
+            - generic [ref=e35]: About
+        - listitem [ref=e36]:
+          - link "Puppy weight calculator" [ref=e38] [cursor=pointer]:
+            - /url: http://stlite.invalid:8731/Puppy_weight_calculator
+            - generic [ref=e39]: Puppy weight calculator
+        - listitem [ref=e40]:
+          - link "Slim Jim percentage" [ref=e42] [cursor=pointer]:
+            - /url: http://stlite.invalid:8731/Slim_Jim_percentage
+            - generic [ref=e43]: Slim Jim percentage
+        - listitem [ref=e44]:
+          - link "Plotting my next move" [ref=e46] [cursor=pointer]:
+            - /url: http://stlite.invalid:8731/Plotting_my_next_move
+            - generic [ref=e47]: Plotting my next move
+        - listitem [ref=e48]:
+          - link "Is grad school worth it?" [ref=e50] [cursor=pointer]:
+            - /url: http://stlite.invalid:8731/Is_grad_school_worth_it?
+            - generic [ref=e51]: Is grad school worth it?
+      - generic [ref=e57]:
+        - generic [ref=e63]:
+          - button "Fullscreen" [ref=e68] [cursor=pointer]:
+            - img [ref=e69]
+          - img "0" [ref=e74]
+        - generic [ref=e77]:
+          - heading "Hi — I'm Vu0ng." [level=1] [ref=e82]: Hi — I'm Vu0ng.
+          - paragraph [ref=e87]: I'm a prolific producer of abandoned projects. This is my attempt to commit to at least some of them. Each page you see is a win against procrastination! 🌼
+          - heading "What I do and why I do" [level=3] [ref=e92]: What I do and why I do
+          - generic [ref=e96]:
+            - paragraph [ref=e97]: Whenever I am faced with a big life decision or dilemma, I gravitate towards formulating it as a mathematical model. To me, the joy of doing this is not that it gives exact answers to life's problems (nor can it), but that it transforms them into something solvable.
+            - paragraph [ref=e98]: If only every life problem has a closed form solution! In my mind, they do. Except when they don't. Then I cry and eat ice cream, like everyone else. ❤️
+  - region "Notifications Alt+T"

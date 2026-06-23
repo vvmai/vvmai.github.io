@@ -1,0 +1,290 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - button [ref=e17] [cursor=pointer]:
+        - img [ref=e18]
+    - generic [ref=e6]:
+      - button [ref=e23] [cursor=pointer]:
+        - img [ref=e24]
+      - generic [ref=e28]:
+        - button [ref=e100] [cursor=pointer]:
+          - img [ref=e101]
+        - list [ref=e31]:
+          - listitem [ref=e32]:
+            - link "About" [ref=e34] [cursor=pointer]:
+              - /url: http://stlite.invalid:8731/
+              - generic [ref=e35]: About
+          - listitem [ref=e36]:
+            - link "Puppy weight calculator" [ref=e38] [cursor=pointer]:
+              - /url: http://stlite.invalid:8731/Puppy_weight_calculator
+              - generic [ref=e39]: Puppy weight calculator
+          - listitem [ref=e40]:
+            - link "Slim Jim percentage" [ref=e42] [cursor=pointer]:
+              - /url: http://stlite.invalid:8731/Slim_Jim_percentage
+              - generic [ref=e43]: Slim Jim percentage
+          - listitem [ref=e44]:
+            - link "Plotting my next move" [active] [ref=e46] [cursor=pointer]:
+              - /url: http://stlite.invalid:8731/Plotting_my_next_move
+              - generic [ref=e47]: Plotting my next move
+          - listitem [ref=e48]:
+            - link "Is grad school worth it?" [ref=e50] [cursor=pointer]:
+              - /url: http://stlite.invalid:8731/Is_grad_school_worth_it?
+              - generic [ref=e51]: Is grad school worth it?
+      - generic [ref=e56]:
+        - generic [ref=e106]:
+          - paragraph [ref=e107]: "In the Summer of 2024, my lease was up. Instead of looking for an apartment, I procrastinated by making a map of NYC's most desirable neighborhoods, which is universally agreed to consist of three things:"
+          - list [ref=e108]:
+            - listitem [ref=e109]: Subways
+            - listitem [ref=e110]: Trees
+            - listitem [ref=e111]: Food
+        - heading "1 Subways" [level=2] [ref=e116]: 1 Subways
+        - paragraph [ref=e121]:
+          - text: If you know me, you know that I am lazy. I am willing to walk 11 mins
+          - emphasis [ref=e122]: max
+          - text: from my apartment to the subway. That said, if the walk happens to pass by multiple coffee shops and the station can get me downtown in 20 mins, I may be willing to go a little farther... clearly, even my basest instincts recognize there is some nuance to what it means to be 'well-connected'.
+        - paragraph [ref=e126]:
+          - text: "A subway station can be valuable in two ways: 1) It can get you to a desirable place, and 2) It"
+          - emphasis [ref=e127]: is
+          - text: the desirable place.
+        - paragraph [ref=e131]: Number 1 hints at some graph shenanigans going on here. If you can capture the NYC subway system in the form of a graph, where each node is a subway station and each edge is the subway line(s) which connect them, then you can calculate the eigenvector centrality metric for each node (i.e. station), which is exactly what I did below.
+        - generic [ref=e139]:
+          - button "Fullscreen" [ref=e144] [cursor=pointer]:
+            - img [ref=e145]
+          - generic [ref=e149]:
+            - img "0" [ref=e150]
+            - paragraph [ref=e153]: NYC subway system represented as a graph.
+        - paragraph [ref=e158]: "Intuitively, the eigenvector centrality answers the question: is this station connected to other stations that are themselves well-connected? In order words, it is not enough for one station to be connected to many other stations — the other stations must themselves be well-connected."
+        - paragraph [ref=e162]: Number 2 is a bit more straightforward. To measure whether the node (station) itself is desirable, I use ridership. The more people swipe into this station, the more desirable it is (either because many people live nearby or because many people get off here and later swipe back through to get home.) The final centrality score is an equal weighted average of ridership and centrality.*
+        - paragraph [ref=e166]: "*For the nitpicky reader, I would much rather have calculated a node-weighted eigenvector centrality score to begin with, but this gets me 90% of the way there and runs out-of-the-box, and that's good enough for me."
+        - generic [ref=e167]:
+          - generic [ref=e175]:
+            - button "Show/hide columns" [ref=e179] [cursor=pointer]:
+              - img [ref=e180]
+            - button "Download as CSV" [ref=e185] [cursor=pointer]:
+              - img [ref=e186]
+            - button "Search" [ref=e191] [cursor=pointer]:
+              - img [ref=e192]
+            - button "Fullscreen" [ref=e197] [cursor=pointer]:
+              - img [ref=e198]
+          - generic [ref=e211]:
+            - iframe [ref=e213]:
+              - generic [active] [ref=f13e1]:
+                - generic [ref=f13e5]:
+                  - img
+                  - generic [ref=f13e6]:
+                    - region "Map" [ref=f13e8]
+                    - button "Toggle attribution" [ref=f13e10]
+                  - img:
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - generic: "0"
+                          - generic:
+                            - generic: "0.005"
+                          - generic:
+                            - generic: "0.01"
+                          - generic:
+                            - generic: "0.015"
+                          - generic:
+                            - generic: "0.02"
+                          - generic:
+                            - generic: "0.025"
+                          - generic:
+                            - generic: "0.03"
+                        - generic:
+                          - generic:
+                            - generic: centrality_metric
+                  - generic [ref=f13e11]:
+                    - img [ref=f13e14] [cursor=pointer]
+                    - generic [ref=f13e16]:
+                      - img [ref=f13e18] [cursor=pointer]
+                      - img [ref=f13e21] [cursor=pointer]
+                      - img [ref=f13e24] [cursor=pointer]
+                    - generic [ref=f13e26]:
+                      - img [ref=f13e28] [cursor=pointer]
+                      - img [ref=f13e31] [cursor=pointer]
+                      - img [ref=f13e34] [cursor=pointer]
+                    - link "plotly-logomark" [ref=f13e37] [cursor=pointer]:
+                      - /url: https://plotly.com/
+                      - img "plotly-logomark" [ref=f13e38]
+                  - img
+                - img [ref=f13e51]
+            - paragraph [ref=e217]:
+              - emphasis [ref=e218]: "Note: The centrality score is on a scale of 0-1, but because the data is highly skewed towards Manhattan, I plotted the color range to max out at the 95th percentile."
+        - paragraph [ref=e222]:
+          - text: Clearly, NYC proper itself is very well-connected. But there are many pockets in the outer boroughs that are
+          - emphasis [ref=e223]: relatively
+          - text: well-connected. This is even more relevant if you actually
+          - emphasis [ref=e224]: want
+          - text: to stay away from the hustle and bustle while being able to get to other parts of the city quickly.
+        - heading "2 Trees" [level=2] [ref=e229]: 2 Trees
+        - paragraph [ref=e234]: Kind of insane that there's a decadal census of each sidewalk tree in NYC (including data about individual health, diameter, and species.) This census doesn't include trees inside parks, so this map doesn't necessarily show proximity to nearby public green spaces, but moreso the overall green-ness of just walking around a neighborhood.
+        - iframe [ref=e236]:
+          - generic [active] [ref=f14e1]:
+            - generic [ref=f14e5]:
+              - img
+              - generic [ref=f14e6]:
+                - region "Map" [ref=f14e8]
+                - button "Toggle attribution" [ref=f14e10]
+              - img:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: "0"
+                      - generic:
+                        - generic: "0.05"
+                      - generic:
+                        - generic: "0.1"
+                      - generic:
+                        - generic: "0.15"
+                      - generic:
+                        - generic: "0.2"
+                      - generic:
+                        - generic: "0.25"
+                      - generic:
+                        - generic: "0.3"
+                      - generic:
+                        - generic: "0.35"
+                      - generic:
+                        - generic: "0.4"
+                    - generic:
+                      - generic:
+                        - generic: trees
+              - generic [ref=f14e11]:
+                - img [ref=f14e14] [cursor=pointer]
+                - generic [ref=f14e16]:
+                  - img [ref=f14e18] [cursor=pointer]
+                  - img [ref=f14e21] [cursor=pointer]
+                  - img [ref=f14e24] [cursor=pointer]
+                - generic [ref=f14e26]:
+                  - img [ref=f14e28] [cursor=pointer]
+                  - img [ref=f14e31] [cursor=pointer]
+                  - img [ref=f14e34] [cursor=pointer]
+                - link "plotly-logomark" [ref=f14e37] [cursor=pointer]:
+                  - /url: https://plotly.com/
+                  - img "plotly-logomark" [ref=f14e38]
+              - img
+            - img [ref=f14e51]
+        - paragraph [ref=e240]:
+          - emphasis [ref=e241]: "Note: tree counts have been normalized to a score of between 0-1."
+        - heading "3 Restaurants" [level=2] [ref=e246]: 3 Restaurants
+        - paragraph [ref=e251]: I grabbed the list of all restaurants that had an inspection between 2023-2024 and new restaurants not yet inspected.
+        - iframe [ref=e253]:
+          - generic [active] [ref=f15e1]:
+            - generic [ref=f15e5]:
+              - img
+              - generic [ref=f15e6]:
+                - region "Map" [ref=f15e8]
+                - button "Toggle attribution" [ref=f15e10]
+              - img:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: "0"
+                      - generic:
+                        - generic: "0.02"
+                      - generic:
+                        - generic: "0.04"
+                      - generic:
+                        - generic: "0.06"
+                      - generic:
+                        - generic: "0.08"
+                      - generic:
+                        - generic: "0.1"
+                      - generic:
+                        - generic: "0.12"
+                    - generic:
+                      - generic:
+                        - generic: restaurants
+              - generic [ref=f15e11]:
+                - img [ref=f15e14] [cursor=pointer]
+                - generic [ref=f15e16]:
+                  - img [ref=f15e18] [cursor=pointer]
+                  - img [ref=f15e21] [cursor=pointer]
+                  - img [ref=f15e24] [cursor=pointer]
+                - generic [ref=f15e26]:
+                  - img [ref=f15e28] [cursor=pointer]
+                  - img [ref=f15e31] [cursor=pointer]
+                  - img [ref=f15e34] [cursor=pointer]
+                - link "plotly-logomark" [ref=f15e37] [cursor=pointer]:
+                  - /url: https://plotly.com/
+                  - img "plotly-logomark" [ref=f15e38]
+              - img
+            - img [ref=f15e51]
+        - heading "Overall score" [level=2] [ref=e258]: Overall score
+        - paragraph [ref=e263]: "Since the # of the trees happened to distinguish well the residential areas, I ended up weighing it twice as much as the other two in order to break up the Manhattan monolith."
+        - iframe [ref=e265]:
+          - generic [active] [ref=f16e1]:
+            - generic [ref=f16e5]:
+              - img
+              - generic [ref=f16e6]:
+                - region "Map" [ref=f16e8]
+                - button "Toggle attribution" [ref=f16e10]
+              - img:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - generic: "0"
+                      - generic:
+                        - generic: "0.05"
+                      - generic:
+                        - generic: "0.1"
+                      - generic:
+                        - generic: "0.15"
+                      - generic:
+                        - generic: "0.2"
+                      - generic:
+                        - generic: "0.25"
+                      - generic:
+                        - generic: "0.3"
+                    - generic:
+                      - generic:
+                        - generic: overall_score
+              - generic [ref=f16e11]:
+                - img [ref=f16e14] [cursor=pointer]
+                - generic [ref=f16e16]:
+                  - img [ref=f16e18] [cursor=pointer]
+                  - img [ref=f16e21] [cursor=pointer]
+                  - img [ref=f16e24] [cursor=pointer]
+                - generic [ref=f16e26]:
+                  - img [ref=f16e28] [cursor=pointer]
+                  - img [ref=f16e31] [cursor=pointer]
+                  - img [ref=f16e34] [cursor=pointer]
+                - link "plotly-logomark" [ref=f16e37] [cursor=pointer]:
+                  - /url: https://plotly.com/
+                  - img "plotly-logomark" [ref=f16e38]
+              - img
+            - img [ref=f16e51]
+        - heading "Summary" [level=2] [ref=e270]: Summary
+        - paragraph [ref=e275]: To be honest, I don't know how useful of an exercise this was. It mostly just confirmed my intuitions about where the best neighborhoods are (LIC, Williamsburg, Dumbo, Forest Hills, Bushwick, etc.) You might also notice that it inflates Manhattan's score a lot, since the city proper ranks high on all 3 metrics. Maybe in the future, I'll add a penalty for something like commerciality (Midtown/Chelsea is great for work and shopping... but who wants to live there?) or affordability.
+        - heading "Appendix" [level=2] [ref=e280]: Appendix
+        - list [ref=e285]:
+          - listitem [ref=e286]:
+            - text: "NYC 2015 tree census:"
+            - link "https://data.cityofnewyork.us/Environment/2015-Street-Tree-Census-Tree-Data/uvpi-gqnh/about_data" [ref=e287] [cursor=pointer]:
+              - /url: https://data.cityofnewyork.us/Environment/2015-Street-Tree-Census-Tree-Data/uvpi-gqnh/about_data
+          - listitem [ref=e288]:
+            - text: "NYC 2023 ridership:"
+            - link "https://data.ny.gov/Transportation/MTA-Subway-Origin-Destination-Ridership-Estimate-2/jsu2-fbtj" [ref=e289] [cursor=pointer]:
+              - /url: https://data.ny.gov/Transportation/MTA-Subway-Origin-Destination-Ridership-Estimate-2/jsu2-fbtj
+          - listitem [ref=e290]:
+            - text: "NYC subway stations shapefile:"
+            - link "https://data.ny.gov/Transportation/MTA-Subway-Stations/39hk-dx4f/about_data" [ref=e291] [cursor=pointer]:
+              - /url: https://data.ny.gov/Transportation/MTA-Subway-Stations/39hk-dx4f/about_data
+          - listitem [ref=e292]:
+            - text: "NYC subway lines shapefile:"
+            - link "https://geo.nyu.edu/catalog/nyu-2451-34758" [ref=e293] [cursor=pointer]:
+              - /url: https://geo.nyu.edu/catalog/nyu-2451-34758
+          - listitem [ref=e294]:
+            - text: "NYC shapefile:"
+            - link "https://data.cityofnewyork.us/City-Government/Borough-Boundaries/tqmj-j8zm" [ref=e295] [cursor=pointer]:
+              - /url: https://data.cityofnewyork.us/City-Government/Borough-Boundaries/tqmj-j8zm
+          - listitem [ref=e296]:
+            - text: "NYC restaurants:"
+            - link "https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j/about_data" [ref=e297] [cursor=pointer]:
+              - /url: https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j/about_data
+  - region "Notifications Alt+T"
