@@ -8,8 +8,8 @@ project:
     - assets/hexes.geojson   # shared hex geometry the NYC maps fetch by URL
 
 website:
-  title: "brainvomit"
-  favicon: assets/photos/IMG_0830.jpg
+  title: "brainvomit"          # browser-tab text / metadata
+  favicon: assets/flower.svg   # 🌸 tab icon
   # High-level sections live in the top navbar; the matching left sidebar shows
   # that section's pages; a page outline appears on the right (toc: true).
   search:
@@ -17,6 +17,7 @@ website:
     type: textbox      # inline box in the navbar, not the overlay popup
   navbar:
     background: primary
+    title: "🌸"                # pink-flower brand (emoji as text renders reliably)
     left:
       - text: "About"
         href: index.qmd
