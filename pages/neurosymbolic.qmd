@@ -45,81 +45,89 @@ provably-correct answer goes to the solver.
 ## Example scenario
 
 Before any prediction markets, here's the same idea on something familiar. A World Cup
-group is four teams in a round robin — everyone plays everyone once, a win is worth 3
-points, a draw 1, a loss 0, and the top two advance. Encode those rules **once** as a
-logic model, drop in the table so far, and a solver settles questions eyeballing can't.
+group is four teams in a round robin — a win is worth 3 points, a draw 1, a loss 0, and
+the top two advance. Encode those rules once, drop in the table so far, and the solver
+reads off things the table itself hides.
 
-Take this snapshot (illustrative), one match left for each team:
+Going into the final round (illustrative): Brazil leads, and the two chasers — Serbia
+and Switzerland, level on points — happen to **play each other**.
 
-| Team | Points | Last match |
+| Team | Points | Final match |
 | --- | --- | --- |
-| Argentina | 6 | vs South Korea |
-| Mexico | 4 | vs Norway |
-| Norway | 1 | vs Mexico |
-| South Korea | 0 | vs Argentina |
+| Brazil | 6 | vs Cameroon |
+| Serbia | 3 | vs Switzerland |
+| Switzerland | 3 | vs Serbia |
+| Cameroon | 0 | vs Brazil |
 
-The model has one variable per remaining match (home win / draw / away win); each
-team's final points are its current total plus whatever those variables produce. Every
-question below is then a single satisfiability check on the same model:
+The whole model is four lines of logic:
+
+- **each remaining match** is one unknown — home win / draw / away win — paying
+  `(3, 0)` / `(1, 1)` / `(0, 3)`;
+- **final points** = points now + what those unknowns add;
+- **clinched** ⟺ `UNSAT(2+ rivals can finish at or above it)` — no result leaves it
+  outside the top two;
+- **eliminated** ⟺ `UNSAT(≤1 rival finishes strictly above it)` — every result leaves
+  it behind two or more.
+
+You can also pin a single result and re-ask. Running it on the snapshot:
 
 ```{python}
-#| echo: true
+#| echo: false
 import z3
 
-teams = ["Argentina", "Mexico", "Norway", "South Korea"]
-points = {"Argentina": 6, "Mexico": 4, "Norway": 1, "South Korea": 0}
-remaining = [("Argentina", "South Korea"), ("Mexico", "Norway")]  # (home, away)
+teams = ["Brazil", "Serbia", "Switzerland", "Cameroon"]
+points = {"Brazil": 6, "Serbia": 3, "Switzerland": 3, "Cameroon": 0}
+remaining = [("Serbia", "Switzerland"), ("Brazil", "Cameroon")]   # the two final-round matches
 
-def model():
+def model(force=None):
     s = z3.Solver()
-    gained = {t: [] for t in teams}
+    gained, res = {t: [] for t in teams}, {}
     for i, (home, away) in enumerate(remaining):
-        r = z3.Int(f"match_{i}")                    # 2 = home win · 1 = draw · 0 = away win
-        s.add(r >= 0, r <= 2)
+        r = z3.Int(f"match_{i}"); s.add(r >= 0, r <= 2)   # 2 home win · 1 draw · 0 away win
+        res[(home, away)] = r
         gained[home].append(z3.If(r == 2, 3, z3.If(r == 1, 1, 0)))
         gained[away].append(z3.If(r == 0, 3, z3.If(r == 1, 1, 0)))
     final = {t: points[t] + z3.Sum(gained[t]) for t in teams}
-    return s, final, gained
+    if force is not None:
+        s.add(force(res))
+    return s, final
 
-def rivals_at_least(final, t):    # other teams that finish with >= t's points
+def rivals_at_least(final, t):
     return z3.Sum([z3.If(final[u] >= final[t], 1, 0) for u in teams if u != t])
-def rivals_above(final, t):       # other teams that finish strictly above t
+def rivals_above(final, t):
     return z3.Sum([z3.If(final[u] > final[t], 1, 0) for u in teams if u != t])
 
-def clinched(t):                  # guaranteed top-2, even if every tiebreak goes against it
-    s, final, _ = model(); s.add(rivals_at_least(final, t) >= 2)
+def clinched(t, force=None):
+    s, final = model(force); s.add(rivals_at_least(final, t) >= 2)
     return s.check() == z3.unsat
-def eliminated(t):                # cannot reach top-2, even if every tiebreak is kind
-    s, final, _ = model(); s.add(rivals_above(final, t) <= 1)
+def eliminated(t, force=None):
+    s, final = model(force); s.add(rivals_above(final, t) <= 1)
     return s.check() == z3.unsat
 
 for t in teams:
     print(f"{t:12} " + ("clinched" if clinched(t) else "eliminated" if eliminated(t) else "still alive"))
 
-# numeric query: fewest points Mexico needs next match to clinch
-def clinches_with(t, k):
-    s, final, gained = model(); s.add(z3.Sum(gained[t]) == k)
-    s.add(rivals_at_least(final, t) >= 2)           # ...can it still be caught?
-    return s.check() == z3.unsat                     # unsat => no, it's through
-need = next(k for k in (0, 1, 3) if clinches_with("Mexico", k))
-print(f"\nMexico clinches with >= {need} point(s) next match (a draw).")
+# pin a result: is Cameroon still eliminated even if it beats Brazil?
+cameroon_wins = lambda res: res[("Brazil", "Cameroon")] == 0
+print("\nCameroon eliminated even if it beats Brazil:", eliminated("Cameroon", force=cameroon_wins))
 ```
 
-Three kinds of answer fall out — the same three the rest of this page turns on:
+The two answers worth having aren't in the points column:
 
-- **Forced** (a claim that *can't fail*): *Argentina has clinched* — no combination of
-  remaining results knocks it out of the top two.
-- **Impossible** (a claim that *can't happen*): *South Korea is eliminated* — no
-  combination puts it through.
-- **A numeric query**: the fewest points *Mexico* needs next match to be safe — **one**,
-  a draw.
+- **Brazil has already clinched — before its own match.** Serbia and Switzerland each
+  sit on 3 and could climb to 6, level with Brazil — but they play *each other*, so at
+  most one gets there and the other is left behind. No set of results puts two teams
+  above Brazil, so it is through even if it loses to Cameroon.
+- **Cameroon is eliminated even if it beats Brazil.** A win lifts it only to 4, and the
+  Serbia–Switzerland game always leaves two teams ahead — so its fate is sealed by a
+  match it isn't even in.
 
-Each is one call to the same solver; only the question changes. Swap "tournament rules"
-for "contract rulebooks" and "standings" for "live prices", and you have the project
-below.
+Both are *fixture* facts the standings can't show: the schedule couples the teams in
+ways a glance misses, and the solver just reads them off. Forced, impossible, and the
+conditional "even if it wins" query are the same moves the rest of this page makes —
+swap "tournament rules" for "contract rulebooks" and "standings" for "live prices."
 
-*(Points only — goal-difference tiebreakers ignored, which is why "clinched" assumes
-ties break against you and "eliminated" assumes they don't.)*
+*(Points only; goal-difference tiebreakers ignored.)*
 
 ## Strategy
 
@@ -281,27 +289,64 @@ different crowds.*
 
 ### 7. The life and death of a real arbitrage
 
-The strongest find: a **bundled bet on which party wins the House Speakership** equals
-a **direct bet on which party controls the House**, split into the two cases of who
-controls the Senate. It clears every earlier hurdle — logically forced, decided by one
-authority, framed two very different ways, watched by two different crowds, every leg
-heavily traded — and it was genuinely incoherent:
+The strongest find pairs two contracts that look unrelated by their titles: a **parlay
+on who controls each chamber** (the four House×Senate combinations) and a **direct bet
+on which party controls the House**. Read together, the combos *partition* every
+outcome, and "Democrats control the House" is exactly two of them — so the direct
+contract must equal the DD-or-DR bundle. The solver proves that identity, then the real
+Kalshi prices go in:
 
-| | value |
-| --- | --- |
-| Bundle implies P(party controls House) | **76%** |
-| Direct contract bid | **78%** |
-| Gross logical gap | **2¢** |
-| Open interest across the three legs | \$4.1M / \$990k / \$850k, ~1¢ spreads |
-| Exchange fee across three legs | ~**4.5¢** |
-| **Net** | **≈ −2.5¢** per contract |
+```{python}
+#| echo: false
+import z3
+DD, DR, RR, RD = z3.Bools("DD DR RR RD")
+s = z3.Solver()
+s.add(z3.PbEq([(DD, 1), (DR, 1), (RR, 1), (RD, 1)], 1))    # exactly one House×Senate outcome
+controlH_D = z3.Bool("controlH_D")
+s.add(controlH_D == z3.Or(DD, DR))                          # the direct contract's rulebook
+s.push(); s.add(z3.Not(controlH_D == z3.Or(DD, DR)))        # try to break the identity
+forced = s.check() == z3.unsat
+s.pop()
+print("CONTROLH-D  ==  DD ∨ DR  :", "forced (UNSAT of its negation)" if forced else "not forced")
 
-This is the first concrete proof the target class is non-empty: Kalshi-native logical
-mispricings, with split crowds and fully-liquid legs, do exist. But the profitable
-middle is squeezed from both sides — a *liquid* mispricing is forced tiny (the per-leg
-fee, ~4.5¢ on three legs, exceeds the 2¢ gap), while a *large* gap needs a badly-priced
-leg, which is either barely traded (you can't trade it) or merely slow to update (a
-speed edge, not a logic edge).
+p_DD, p_DR, bid = 0.40, 0.36, 0.78                          # Kalshi asks / direct bid, 2026-06-21
+gap = round((bid - (p_DD + p_DR)) * 100)
+cost = (1 - bid) + p_DD + p_DR                              # buy NO(direct)+YES(DD)+YES(DR): pays $1 always
+fee = sum(0.07 * p * (1 - p) for p in (1 - bid, p_DD, p_DR)) * 100
+print(f"bundle DD+DR = {p_DD + p_DR:.2f}   vs   direct bid {bid:.2f}   ->   {gap}¢ incoherence")
+print(f"locked basket costs {cost:.2f}  ->  +{round((1 - cost) * 100)}¢ gross,  −{fee:.1f}¢ fees,  net {round((1 - cost) * 100) - fee:+.1f}¢")
+```
+
+So the identity is **proven**; the legs are deeply liquid (real Kalshi open interest:
+\$4.1M / \$990k / \$930k, ~1¢ spreads); two different crowds trade the two framings — and
+there really was a 2¢ gap. It is the first concrete proof the target class is non-empty.
+It just doesn't pay: the per-leg fee (~4.5¢ over three legs) is larger than the gap.
+That's the general trap — a *liquid* mispricing is forced tiny, while a *large* one needs
+a leg so mispriced it's either untradeable (thin) or merely slow (a speed edge, not a
+logic edge). The profitable middle is squeezed shut.
+
+**Was it real, and how long did it last?** Pulling the three legs' actual price history
+from Kalshi, the gap (direct bid − bundle ask) sat open for about five days:
+
+```{python}
+#| echo: false
+import plotly.graph_objects as go, plotly.io as pio
+pio.templates.default = "plotly"
+days = ["Jun 14", "Jun 15", "Jun 16", "Jun 17", "Jun 18", "Jun 19", "Jun 20", "Jun 21", "Jun 22", "Jun 23"]
+gap_c = [0, -1, -1, 0, 2, 1, 1, 2, 2, 0]      # cents, from Kalshi daily candle closes
+fig = go.Figure(go.Bar(x=days, y=gap_c,
+                       marker_color=["#2ca02c" if g > 0 else "#cfcfcf" for g in gap_c]))
+fig.add_hline(y=0, line_color="black")
+fig.update_layout(height=300, margin=dict(l=0, r=0, t=10, b=0), showlegend=False,
+                  yaxis_title="direct bid − bundle ask (¢)")
+fig
+```
+
+Live from roughly **June 18–22, 2026**; then on the 23rd the D-House/R-Senate leg
+repriced 36¢ → 38¢, the bundle rose to 78¢, and the gap vanished. A textbook *temporary*
+edge — real while nobody was reconciling the two framings, gone once the price moved.
+(Verified live: the [Balance-of-Power combo legs](https://kalshi.com/markets/kxbalancepowercombo)
+and the "Democrats win the House" market are still open on Kalshi, now coherent.)
 
 ## Conclusion
 
