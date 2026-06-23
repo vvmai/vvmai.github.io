@@ -118,6 +118,12 @@ nyc_connectivity = gpd.GeoDataFrame(nyc_connectivity, geometry='coords', crs=CRS
 X = add_metric_to_hexgrid(get_nyc_geo(), nyc_connectivity, 'centrality_metric',
                           h3_resolution=H3_RESOLUTION, smoothing_weights=[4, 3, 2, 1])
 
+# Lossless map shrink: snap hex coords to a ~1m grid (1e-5 deg). Hexes are ~150m,
+# so this is visually identical but roughly halves the geojson embedded in each
+# of the 4 maps. All later maps reuse this geometry.
+import shapely
+X['geometry'] = shapely.set_precision(X.geometry.values, grid_size=1e-5)
+
 station_centrality.rename(columns={'station_name': 'Station Name',
                                    'centrality_metric': 'Centrality Score'}).head(20)
 ```
