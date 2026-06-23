@@ -33,6 +33,7 @@ Thumbs.db
 
 # Build output
 _site/
+.playwright-mcp/
 
 # Data (optional - uncomment if you want to exclude large data files)
 # data/*.csv

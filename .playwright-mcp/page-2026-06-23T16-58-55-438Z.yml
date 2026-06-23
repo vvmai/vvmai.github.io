@@ -1,4 +1,0 @@
-- generic [ref=e2]:
-  - banner [ref=e4]
-  - region "Notifications Alt+T":
-    - alert [ref=e10]: Loading Pyodide.

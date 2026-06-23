@@ -26,10 +26,9 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html _site/
-          # SPA fallback: GitHub Pages serves 404.html for any unresolved path
-          # (e.g. a refreshed/bookmarked sub-page). It boots the same app, which
-          # then routes client-side from the URL.
-          cp index.html _site/404.html
+          # SPA deep-link fallback: Pages serves 404.html for unresolved paths;
+          # it redirects through index.html to restore the exact sub-page.
+          cp 404.html _site/404.html
           cp app.py About.py utils.py _site/
           mkdir -p _site/.streamlit
           cp .streamlit/config.toml _site/.streamlit/
