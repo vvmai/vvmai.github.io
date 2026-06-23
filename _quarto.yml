@@ -22,7 +22,7 @@ website:
 
 format:
   html:
-    theme: cosmo   # Quarto default; no custom styling yet
+    theme: brite
 
 # Heavy Python cells (the NYC analysis) execute locally once; outputs are cached
 # in _freeze/ and committed, so CI deploys without geopandas or the raw data.
