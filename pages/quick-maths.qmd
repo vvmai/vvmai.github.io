@@ -68,9 +68,3 @@ viewof sleepHours = Inputs.number({label: "Sleep per night (hr)", min: 0, max: 2
 
 ${compared}`;
 }
-```
-
-::: {.callout-note}
-Assumes all else equal — in particular that your lifespan doesn't change with how
-much you sleep
-:::

@@ -6,18 +6,16 @@ execute:
   warning: false
 ---
 
-## BlobSim
+Inspired by Conway's *Game of Life*, I wanted to extend the experiment to simulate not only the rules but also the game-theoretic consequences of what those rules imply, given a population of agents that can sense and interact with the universe and each other. 
 
-`blobsim` is a small world that runs on a grid. Each cell can hold one **blob** — a
-simple creature with an energy level. Step by step, every blob senses its
-neighbours, picks an action (move, eat, reproduce, or rest), and pays for it in
-energy. Blobs that run out of energy die; well-fed ones reproduce. The grid itself
-holds energy that blobs eat, and that may or may not replenish over time.
+BlobSim is something between a cellular automaton and simple ecological sandbox. It is a small, toroidal gridded world. Each cell can hold one **blob** — a simple creature with energy and metabolism. Time advances in discrete steps. At each step, every blob inspects its surroundings, selects an action (move, eat, reproduce, or rest) based on a swappable 'intelligence engine', and the universe runs the energy accounting/conflict resolution via asserted laws. Run out of energy and you die; eat well and you reproduce. The grid itself generates food at a configurable rate. 
 
-It starts from Conway's *Game of Life* — cells on a grid that live or die by their
-neighbours — and asks what happens when each cell becomes an individual that has to
-*earn its living*: carry energy, spend it to act, and starve if it can't. The result
-sits somewhere between a cellular automaton and a tiny ecology.
+You can imagine how BlobSim arises from the Game of Life via abstraction of just two key ideas:
+
+1. Agent state is defined not as a binary dead/alive, but as a continuous energy level.
+2. Conway's behavioral rules are a function of the local neighborhood; BlobSim introduces probabilistic decision-making based on the underlying swappable 'engine'.
+
+ie BlobSim is reducible to Conway's Game of Life if the engine is deterministic and the energy level is binary.
 
 <!-- TODO: what question this world is meant to explore. -->
 
@@ -26,11 +24,14 @@ sits somewhere between a cellular automaton and a tiny ecology.
 The grid wraps around at the edges (a blob walking off the right side reappears on
 the left). Every step runs the same fixed sequence:
 
-> observe → decide → resolve who-goes-where → charge energy → act → absorb from the
-> grid → update the environment → remove the dead → record
+1. observe: each blob gathers local information
+2. decide: engines choose an action based on observations and internal state
+3. conflict resolution: since time steps are discrete, the ordering of actions must be resolved 
+4. energy accounting/execution: conservation laws are enforced, and the energy ledger is updated; resolved actions are applied to the grid and the blobs
+5. grid update: the environment adds energy to the grid according to its rules
 
-The behaviour of a blob ("rules"), the behaviour of the environment (decaying vs.
-replenishing), and how movement conflicts are settled are each swappable without
+The behaviour of a blob (the "engine"), the behaviour of the environment (decaying vs.
+replenishing), and how conflicts are resolved are each swappable without
 touching the rest.
 
 <!-- TODO: more on the sensing model and the action costs, in your words. -->
@@ -39,18 +40,17 @@ touching the rest.
 
 ## Universal laws
 
+A set of invariants about this world are asserted, to maintain a somewhat coherent and internally consistent universe:
+
 - **Conservation of energy.** At any moment, the energy held by living blobs, plus the
   energy left in the grid, plus everything spent so far, equals what the world
-  started with (plus anything the environment has since added). A running tally
-  re-checks this equality every single step, so a bug that quietly leaks or invents
-  energy cannot hide.
-- **Determinism.** The same starting seed reproduces the exact same run,
-  step for step.
+  started with (plus anything the environment has since added)
+  - **Reproduction and predation only moves energy.** A new blob is funded entirely out of its
+  parent's energy; a predator's kill transfers energy from the victim to the attacker
+  - **Death is permanent.** A blob whose energy falls to the death threshold is
+  removed forever
+- **Determinism.** The same starting seed reproduces the exact same run
 - **One blob per cell.** No two blobs ever occupy the same square.
-- **Reproduction only moves energy.** A new blob is funded entirely out of its
-  parent's energy; splitting never creates any.
-- **Death is permanent.** A blob whose energy falls to the death threshold is
-  removed immediately; every surviving blob sits strictly above it.
 
 ## Example
 
@@ -101,7 +101,7 @@ fig = go.Figure()
 fig.add_scatter(x=traj.step, y=traj.population, name="population", yaxis="y1")
 fig.add_scatter(x=traj.step, y=traj.total_energy, name="total energy (blobs + grid)", yaxis="y2")
 fig.update_layout(
-    height=380, margin=dict(l=0, r=0, t=10, b=0), xaxis_title="step",
+    height=300, margin=dict(l=0, r=0, t=10, b=0), xaxis_title="step",
     yaxis=dict(title="population"),
     yaxis2=dict(title="energy", overlaying="y", side="right", showgrid=False),
     legend=dict(orientation="h", y=1.12),
@@ -109,27 +109,15 @@ fig.update_layout(
 fig
 ```
 
-The *population* line (left axis) counts living blobs; the *total
-energy* line (right axis) is the energy currently held by blobs and the grid together.
-The run opens with a boom — the grazers find food and multiply roughly tenfold in the
-first ~20 steps — which overshoots what the grid can feed. The crowd then draws energy
-down faster than it regenerates, so the energy line sags and the population crashes
-back. From there the two lines settle into damped, out-of-phase swings (a population
-peak drains energy → the shortage starves the next generation → energy recovers →
-repeat), converging toward a steady level — here ~125 blobs — that the regenerating
-grid can sustain indefinitely. The shape to take away: **overshoot → correction →
-convergence to a carrying capacity.**
+The run opens with a boom — the grazers find food and grow ~10x in ~20 steps, overshooting the grid's energy capacity. At that inflection point, the population draws energy down faster than it regenerates, so the energy level drops and the population crashes. The two mechanisms settle into a gradually dampening feedback loop that behaves as out-of-phase swings, converging toward the sustainable stready-state population.
 
 <!-- TODO: add your own read if you want to emphasize something else. -->
 
 ## Benchmark runs/base cases
 
-Each base case below
-computes a target *analytically from the rules* (a conservation identity, an expected
-lifespan, a stable population) and then checks the simulation lands on it within
-tolerance. Passing them all is a statistical precondition: evidence the engine is
-predictable and internally consistent, so that later, non-base-case results can be
-read as findings rather than bugs.
+For purpose of sanity checking, each base case below computes a target *analytically from the
+rules* (a conservation identity, an expected lifespan, a stable population) and then
+checks the simulation derives it within tolerance. 
 
 ### Predicted lifespan
 
@@ -142,7 +130,10 @@ $$E[\tau] \;=\; \frac{E_0 - B}{E[c]} \;+\; \frac{B}{M} \;+\; (\text{boundary cor
 
 with starting energy $E_0$, resting cost $M$, average active cost $E[c]$, and the
 affordability threshold $B$ below which moving is no longer possible. For the test
-parameters this predicts **≈ 186 steps**; the run observed 185.9.
+parameters this predicts **≈ 186 steps**. Across 50 independent runs the observed
+lifespans cluster tightly around the prediction (mean ≈ 185):
+
+![Lifespan over 50 lone-blob runs. The distribution sits right on the closed-form prediction (red), with observed mean (black dashed) ≈ 185.](/assets/images/blobsim/bench_lifespan.png)
 
 <!-- TODO: why the two-phase split, in your words. -->
 
@@ -156,20 +147,26 @@ within
 $$T_\text{max} = \left\lceil E_0 / m \right\rceil$$
 
 steps — and reproduction can't postpone it, because offspring are funded from parents
-(energy only moves, it isn't created). The animation above shows exactly this.
+(energy only moves, it isn't created). And it isn't a one-off: across many seeds every
+finite-grid run climbs, then collapses to zero without exception.
+
+![Twelve independent finite-grid runs — every one reaches zero. Extinction isn't a quirk of one seed; it's guaranteed by the energy budget.](/assets/images/blobsim/bench_extinction.png)
 
 <!-- TODO. -->
 
-### Boom-bust cycle
+### Propagation, ceiling, then death
 
-**The rule.** Give blobs a rich grid and they multiply fast — but the peak is capped
-by *space*, not energy: with one blob per cell, the population can't exceed the number
-of cells. Once it fills the grid and the food is drawn down, it collapses to
-extinction.
+**The rule.** Give blobs a rich but *non-replenishing* grid and they multiply fast — but
+this is not a *cycle*, it's a one-way trip: **propagation → ceiling → death**. The
+population spreads until it hits a ceiling set by *space*, not energy (with one blob per
+cell it can't exceed the number of cells); then, with no new energy coming in, the
+crowd draws the finite store down and starves all at once. There is no recovery — the
+energy to fund a second wave was already spent.
 
-![A population explodes to fill the grid, then crashes.](/assets/images/blobsim/sc4_boom_bust.gif)
+![A population spreads to fill the grid, hits the one-per-cell ceiling, then starves to extinction.](/assets/images/blobsim/sc4_boom_bust.gif)
 
-<!-- TODO: the overshoot → depletion → die-off mechanism. -->
+<!-- TODO: contrast with the *regenerating* example up top, which DOES oscillate because
+energy is replenished — the difference is the environment, not the blobs. -->
 
 ### Carrying capacity
 
@@ -187,6 +184,14 @@ level — evidence it's a genuine attractor, not an artifact of where you start.
 ![Crowded start — relaxes down to the same level.](/assets/images/blobsim/sc5_dense.gif)
 :::
 
+Across many runs of each kind, both starting densities collapse onto the *same* band
+within ~30 steps — sparse runs rising into it, dense runs falling into it — which is the
+signature of a genuine attractor. (It settles a little *above* the simple $N^*$ line — an
+expected overshoot: the formula assumes the blobs are perfectly mixed, but real ones
+spread out, so fewer of their moves collide and get wasted and a few more survive.)
+
+![Smoothed population over many runs. Sparse starts (blue, from 10) rise and dense starts (orange, from 300) fall onto one common band — the same attractor regardless of where you start. Dashed line is the mean-field prediction N* ≈ 106.](/assets/images/blobsim/bench_carrying.png)
+
 <!-- TODO: the surprise — observed settles ~25% above the prediction, because the
 mean-field math assumes blobs are well-mixed; real blobs cluster and spread out, so
 fewer of their moves collide and get wasted. -->
@@ -195,7 +200,9 @@ fewer of their moves collide and get wasted. -->
 
 **The rule.** A single blob on a fast-replenishing grid absorbs more each step than it
 spends, so its energy climbs quickly to the maximum it can hold and then stays pinned
-there — steady, with essentially no variation.
+there — steady, with essentially no variation. Several runs, same story every time:
+
+![Energy of a lone blob across several runs — each shoots to the maximum it can hold (20) within a few steps and stays pinned.](/assets/images/blobsim/bench_lone_energy.png)
 
 <!-- TODO. -->
 
@@ -208,10 +215,16 @@ dies out; above it, survival becomes possible. The crossover is sharp — a phas
 transition.
 
 ::: {layout-ncol=2}
-![Below the critical rate — the population dies out.](/assets/images/blobsim/c2_extinction.gif)
+![Below the critical rate — the population dies out.](/assets/images/blobsim/c2_extinction.gif){width="320"}
 
-![Above the critical rate — the population survives.](/assets/images/blobsim/c2_survival.gif)
+![Above the critical rate — the population survives.](/assets/images/blobsim/c2_survival.gif){width="320"}
 :::
+
+Sweeping the rate and measuring how often the population survives (10 seeds per rate)
+draws out the transition: survival jumps from near-zero to near-certain across a narrow
+band around the critical rate ≈ 0.075.
+
+![Survival probability versus grid replenishment rate. The sharp rise across ~0.075 is the phase transition.](/assets/images/blobsim/bench_threshold.png)
 
 <!-- TODO. -->
 
@@ -235,3 +248,74 @@ take over. Greater efficiency compounds into dominance.
 4. Survival has a sharp threshold in the replenishment rate.
 5. The simplest population prediction runs ~25% low because it over-counts collisions.
 -->
+
+## Emergent behavior
+
+My primary interest was in discovering strong emergence (after having verified weak emergence). Coexistence niches, non-obvious optimization strategies, and other non-predictable patterns that arise from the interaction of simple rules. 
+
+### Predation
+
+To introduce direct inter-species interactions, a blob can now **attack** an adjacent blob of a species it preys on. Hunt success is determined by energy: the attacker wins only if it currently holds *more* energy than its victim; a kill transfers the victim's energy to the attacker; a failed hunt costs the attempt. Crucially, predators stay **omnivores**: every blob still
+grazes the grid as before; hunting is purely opportunistic.
+
+<!-- TODO: why energy-as-strength is the right combat rule, in your words. -->
+
+### The ouroboros
+
+I discovered the conditions to produce an ouroborous: A eating B in one place while B eats A in another, the
+dividing line forever circling. 
+
+The missing ingredient is a **cycle of three**: A eats B, B eats C, C eats A — rock,
+paper, scissors. Now no one is strongest, and from a random scatter the grid
+spontaneously sorts itself into travelling patches that chase each other forever:
+
+![Three omnivores in a cycle (A eats B, B eats C, C eats A) self-organise into rotating domains — each colour endlessly eating into the next and being eaten from behind.](/assets/images/blobsim/cyclic_ouroboros.gif){width="320"}
+
+![The cyclic world at five steps — domains advance and retreat as each colour eats into the one it dominates.](/assets/images/blobsim/cyclic_frames.png){width="320"}
+
+The population never converges: each population oscillates, peaking after the species
+it eats, all three locked in the same rotation. Two views of that rotation — the
+populations over time (left), and the same whole-grid A:B:C mix drawn step by step as a
+path on a triangle (right), where each corner is "all one species", the centre an even
+split, and colour runs dark (start) → bright (end):
+
+::: {layout-ncol=2}
+![Populations over the run — sustained, out-of-phase oscillation; each peak chases the prey it eats.](/assets/images/blobsim/cyclic_populations.png)
+
+![The whole-grid mix drawn as a path, orbiting the three-way centre — never reaching a corner or settling.](/assets/images/blobsim/cyclic_orbit.gif){width="240"}
+:::
+
+The system never diverges into corners (no species ever wins) and never reaches the centre (convergence) — its population mix is in perpetual orbit. This universe cycles ~ 0.5 million units of energy through births, kills, and metabolism over 1.5k steps, and the conservation ledger still balances to machine precision.
+
+<!-- TODO: your own read — why the 3-cycle rotates and the 2-cycle can't (chirality / no
+cyclic dominance), and whatever you find most striking watching the gif. -->
+
+### The ouroboros is fragile to size
+
+The cyclic coexistence isn't guaranteed — it **depends on the world being big enough**.
+Coexistence is a *spatial* effect: the three only persist because the rotating patches
+keep them locally separated. Shrink the grid and random fluctuations let one species
+vanish — and then the cycle breaks catastrophically. Say C dies out; now A has lost its
+only predator (C ate A), so A grows unchecked and drives B extinct too. Three becomes
+one. The tail-eating snake eats *itself*.
+
+Running the same setup at different grid sizes (5 seeds each), and asking how often all
+three survive to step 600, gives a sharp transition around ~32 cells a side:
+
+![Fraction of runs keeping all three species, versus grid size. Below ~30 the cycle collapses to a monoculture; above ~45 all three reliably coexist.](/assets/images/blobsim/cyclic_finite_size.png)
+
+The two regimes look completely different on the grid — a small world is eaten down to a
+single colour, while a large one sustains the rotation indefinitely:
+
+::: {layout-ncol=2}
+![Small world (22×22) — diversity collapses to one survivor.](/assets/images/blobsim/cyclic_collapse.gif){width="320"}
+
+![Large world (60×60) — all three coexist, chasing forever.](/assets/images/blobsim/cyclic_ouroboros.gif){width="320"}
+:::
+
+This is the grid version of a known result in cyclic competition (Reichenbach *et al.*,
+*Nature* 2007): all three survive only when the world is bigger than a single rotating
+patch — one spiral's width. Below that, chance picks a winner and diversity is lost.
+
+<!-- TODO: your own read on why bigger = more robust (independent patches buffering
+fluctuations), if you want to expand it. -->

@@ -5,20 +5,18 @@ jupyter: brainvomit
 
 ## Thesis
 
-A prediction market sells **contracts** that pay \$1 if a stated thing happens and
-\$0 if it doesn't, so a contract's price acts like the crowd's estimate of the
-probability. The familiar ways to make risk-free money here — prices that don't add
-up, or the same bet priced differently on two sites — vanish fast once professional
-traders arrive, leaving a race won by whoever is fastest.
+A prediction market sells **contracts** that pay \$1 if some stated thing happens and
+\$0 if it doesn't, so the price doubles as the crowd's guess at the probability. The
+familiar ways to make risk-free money here — prices that don't add up, or the same bet
+going cheaper on another site — get cleaned out in seconds once the megafunds
+arrive. That race goes to whoever is fastest, and I am not fastest.
 
-This project tests a different kind of opportunity: one you find by **reasoning**,
-not by being fast. Every contract has a **rulebook** — the precise legal text that
-decides payout. The plan: use a language model to read those rulebooks and translate
-them into formal logic, then hand that logic to an automated theorem-prover (a
-**solver**) that can *prove* when two or more contracts' prices logically
-contradict each other. A proven contradiction is a guaranteed-profit trade. The edge,
-if it exists, comes from reading fine print nobody bothered to combine — not from
-trading faster.
+As a bottomfeeder, I went looking for a different kind of arbitrage, one you find via **reasoning**. Every contract has a **rulebook** — the precise legal text that decides who
+gets paid. The idea was to have a language model read those rulebooks and translate them into
+formal logic, then hand the logic (DSL) to an automated theorem-prover (an SMT solver) that can
+*prove* when two or more contracts' prices contradict each other. A proven contradiction
+is a guaranteed-profit trade. The edge, if there is one, comes from reading fine print
+no one actually looks at — not from robbing AWS's closest regional compute clusters.
 
 <!-- TODO: your framing / why this caught your interest. -->
 
@@ -44,10 +42,9 @@ provably-correct answer goes to the solver.
 
 ## Example scenario
 
-Before any prediction markets, here's the same idea on something familiar. A World Cup
-group is four teams in a round robin — a win is worth 3 points, a draw 1, a loss 0, and
-the top two advance. Encode those rules once, drop in the table so far, and the solver
-reads off things the table itself hides.
+A more intuitive and topical example: a World Cup group is four teams in a round robin — a win is worth 3
+points, a draw 1, a loss 0, and the top two advance. Encode those rules once, drop in
+the table so far, and the solver reads off things the table itself hides.
 
 Going into the final round (illustrative): Brazil leads, and the two chasers — Serbia
 and Switzerland, level on points — happen to **play each other**.
@@ -68,6 +65,9 @@ The whole model is four lines of logic:
   outside the top two;
 - **eliminated** ⟺ `UNSAT(≤1 rival finishes strictly above it)` — every result leaves
   it behind two or more.
+- **fewest points to clinch** — the smallest final total `P` for which
+  `UNSAT(finish on ≥ P and 2+ rivals still at or above)` holds: the lowest total that
+  guarantees a top-two seat. If no reachable `P` works, the team can't clinch at all.
 
 You can also pin a single result and re-ask. Running it on the snapshot:
 
@@ -76,10 +76,8 @@ You can also pin a single result and re-ask. Running it on the snapshot:
 import z3
 
 teams = ["Brazil", "Serbia", "Switzerland", "Cameroon"]
-points = {"Brazil": 6, "Serbia": 3, "Switzerland": 3, "Cameroon": 0}
-remaining = [("Serbia", "Switzerland"), ("Brazil", "Cameroon")]   # the two final-round matches
 
-def model(force=None):
+def model(points, remaining, force=None):
     s = z3.Solver()
     gained, res = {t: [] for t in teams}, {}
     for i, (home, away) in enumerate(remaining):
@@ -87,7 +85,7 @@ def model(force=None):
         res[(home, away)] = r
         gained[home].append(z3.If(r == 2, 3, z3.If(r == 1, 1, 0)))
         gained[away].append(z3.If(r == 0, 3, z3.If(r == 1, 1, 0)))
-    final = {t: points[t] + z3.Sum(gained[t]) for t in teams}
+    final = {t: z3.Sum([z3.IntVal(points[t])] + gained[t]) for t in teams}
     if force is not None:
         s.add(force(res))
     return s, final
@@ -97,24 +95,29 @@ def rivals_at_least(final, t):
 def rivals_above(final, t):
     return z3.Sum([z3.If(final[u] > final[t], 1, 0) for u in teams if u != t])
 
-def clinched(t, force=None):
-    s, final = model(force); s.add(rivals_at_least(final, t) >= 2)
+def clinched(points, remaining, t, force=None):
+    s, final = model(points, remaining, force); s.add(rivals_at_least(final, t) >= 2)
     return s.check() == z3.unsat
-def eliminated(t, force=None):
-    s, final = model(force); s.add(rivals_above(final, t) <= 1)
+def eliminated(points, remaining, t, force=None):
+    s, final = model(points, remaining, force); s.add(rivals_above(final, t) <= 1)
     return s.check() == z3.unsat
 
+# --- final round: leader plus two chasers who play each other ---
+points = {"Brazil": 6, "Serbia": 3, "Switzerland": 3, "Cameroon": 0}
+remaining = [("Serbia", "Switzerland"), ("Brazil", "Cameroon")]   # the two final-round matches
+
 for t in teams:
-    print(f"{t:12} " + ("clinched" if clinched(t) else "eliminated" if eliminated(t) else "still alive"))
+    print(f"{t:12} " + ("clinched" if clinched(points, remaining, t)
+                         else "eliminated" if eliminated(points, remaining, t) else "still alive"))
 
 # pin a result: is Cameroon still eliminated even if it beats Brazil?
 cameroon_wins = lambda res: res[("Brazil", "Cameroon")] == 0
-print("\nCameroon eliminated even if it beats Brazil:", eliminated("Cameroon", force=cameroon_wins))
+print("\nCameroon eliminated even if it beats Brazil:",
+      eliminated(points, remaining, "Cameroon", force=cameroon_wins))
 ```
+What isn't in the score table:
 
-The two answers worth having aren't in the points column:
-
-- **Brazil has already clinched — before its own match.** Serbia and Switzerland each
+- **Brazil has clinched before its own match.** Serbia and Switzerland each
   sit on 3 and could climb to 6, level with Brazil — but they play *each other*, so at
   most one gets there and the other is left behind. No set of results puts two teams
   above Brazil, so it is through even if it loses to Cameroon.
@@ -122,32 +125,56 @@ The two answers worth having aren't in the points column:
   Serbia–Switzerland game always leaves two teams ahead — so its fate is sealed by a
   match it isn't even in.
 
-Both are *fixture* facts the standings can't show: the schedule couples the teams in
-ways a glance misses, and the solver just reads them off. Forced, impossible, and the
-conditional "even if it wins" query are the same moves the rest of this page makes —
-swap "tournament rules" for "contract rulebooks" and "standings" for "live prices."
+Both are facts the table doesn't show: the scheduling produces relationships that are forced yet non-obvious, and the solver just retrieves them.
 
-*(Points only; goal-difference tiebreakers ignored.)*
+The same model answers a sharper question — *what is the fewest points that guarantee qualification?* — and the answer can invert the standings entirely. Take a different snapshot: three teams level on 2 (they have drawn each other), with the last-place side still to play all three.
+
+| Team | Points | Remaining matches |
+| --- | --- | --- |
+| Brazil | 2 | vs Cameroon |
+| Serbia | 2 | vs Cameroon |
+| Switzerland | 2 | vs Cameroon |
+| Cameroon | 0 | vs Brazil, Serbia, Switzerland |
+
+```{python}
+#| echo: false
+points = {"Brazil": 2, "Serbia": 2, "Switzerland": 2, "Cameroon": 0}
+remaining = [("Brazil", "Cameroon"), ("Serbia", "Cameroon"), ("Switzerland", "Cameroon")]
+
+def reachable(points, remaining, t):
+    s, final = model(points, remaining); totals = set()
+    while s.check() == z3.sat:                        # enumerate every total t can finish on
+        v = s.model().eval(final[t]).as_long(); totals.add(v); s.add(final[t] != v)
+    return sorted(totals)
+def guaranteed_at(points, remaining, t, P):           # finishing on ≥ P leaves no losing world
+    s, final = model(points, remaining); s.add(final[t] >= P)
+    s.add(rivals_at_least(final, t) >= 2)
+    return s.check() == z3.unsat
+def fewest_to_clinch(points, remaining, t):
+    safe = [P for P in reachable(points, remaining, t) if guaranteed_at(points, remaining, t, P)]
+    return min(safe) if safe else None
+
+for t in teams:
+    n = fewest_to_clinch(points, remaining, t)
+    print(f"{t:12} " + (f"clinches with {n} points" if n is not None
+                        else "cannot clinch — no total is enough"))
+```
+
+The last-place team is the **only** one that can clinch — on just 4 points, without winning out. Because Cameroon plays all three rivals, the very results that hold it to 4 (one win, one draw, one loss) push two of them below it: the side it beats stays on 2, the side it draws climbs only to 3, and only the side that beats Cameroon reaches 5 — one rival above, second place guaranteed. Meanwhile the three teams on 2 can each reach 5 yet none can clinch: if Cameroon loses out they all finish level on 5, a three-way tie for two seats. A standings-based eye backs the teams on points and writes off the one on zero; the solver reads off the opposite.
+
+From here, swap "tournament rules" for "contract rulebooks" and "standings" for "live prices."
 
 ## Strategy
 
 The expensive step — carefully reading a rulebook, turning it into logic, checking it
-with the solver — is spent only on promising candidates, picked out by cheap filters
-first. The pipeline:
+with the solver — is spent only on promising candidates, picked out first by cheap heuristics:
 
-> is it actually being traded? → translate rulebooks into logic → is the link
-> *enforceable* (forced by the rules, not just true about the world)? → score how much
-> the contracts pin each other down → grow the set toward whatever adds the most force
+1. liquity check: is it actually being traded?
+2. encode terms into logical statements, then check the solver for USNATs
+3. degrees-of-freedom-removed: score how much the added terms reduce the set of possible outcomes
+4. grow the set toward whatever imposes the strongest constraints, then check the solver again
 
-Two ideas do the heavy lifting. A **grounding** label attached to every claimed link
-names *what* connects two contracts — which makes "merely true about the world" links
-impossible to write down, and checks the resolver is actually obligated to honor the
-link at payout. And the **force score** counts how many still-possible outcomes a
-contract rules out, a set-level measure that can catch a link only visible when three
-or more contracts combine.
-
-Whether a search is even worth starting is decided up front by a break-even rule —
-the fraction of groups that must contain a tradeable find to justify the cost:
+Whether a search is even worth starting is decided up front by a break-even rule: the fraction of groups that must contain a tradeable find to justify the cost.
 
 $$p_1 = \frac{C_\text{cluster}}{V_\text{find}\times R}$$
 
@@ -159,20 +186,19 @@ discovery pays off.
 
 ## The golden case
 
-The relationship has to be **forced by the rulebooks** (not the casual descriptions),
-**true no matter how the world turns out**, **hidden across contracts** (visible only
-by reading two or more together), **honored at payout** (same resolver, same rules),
-and **contradicted by the actual tradeable prices** — with real volume on every leg at
-once. Conditions about history, outside copies, and the crowd all collapse into one
-question: **does anyone already watch this relationship here?** If yes, it's priced.
-So the target is one *nobody* watches — which makes any such opportunity temporary.
+A few attributes have been identified to be necessary (but not sufficient) for a mispricing to be *provable* and *tradeable*:
+1. The relationship must be logically forced by the legal terms
+2. **True no matter how the world turns out**; unintuitively, outcomes are not determined by the premise but by the fine print of the rulebooks. This is where bet resolution becomes debatable.
+3. **hidden across contracts**: visible only
+by reading two or more together; ie the contradiction is not within itself (too obvious) but between two or more contracts
+4. **contradicted by the actual tradeable prices** — with real volume on every leg at once
+5. Conditions about history, outside parallels, and the market consensus all collapse into one question: **does anyone already watch this relationship here?** If yes, it's priced. So the target is one *nobody* watches — which makes any such opportunity temporary.
 
-One rule, found by scoring category after category, decides the "true no matter what"
+One rule decides the "true no matter what"
 condition: **a forced link survives when both contracts resolve on a yes/no event and
-breaks the moment either resolves on a continuous number.** A continuous strike (a vote
-share, an inflation reading) makes the exact number the operative fact, so for some
-values the implication between two contracts simply fails. A yes/no fact (a law passed,
-a person appointed) is shared verbatim, so the implication holds automatically.
+breaks the moment either resolves on a continuous number.
+
+** A continuous strike (a vote share, an inflation reading) makes the exact number the operative fact, so for some values the implication between two contracts simply fails. A yes/no fact (a law passed, a person appointed) is shared verbatim, so the implication holds automatically.
 
 ## From rulebook to proof
 

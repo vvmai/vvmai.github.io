@@ -1,19 +1,17 @@
 ---
-title: "Hi — I'm Vương."
-pagetitle: "brainvomit — Vương"
+title: "What I do and why I do"
+pagetitle: "About"
 ---
 
-![](/assets/photos/IMG_0830.jpg)
+![](/assets/photos/IMG_0830.jpg){width="320"}
 
 I'm a prolific producer of abandoned projects. This is my attempt to commit to at
-least some of them. Each page you see is a win against procrastination! 🌸
-
-## What I do and why I do
+least some of them. Each page you see is a win against procrastination.
 
 Whenever I am faced with a big life decision or dilemma, I gravitate towards
 formulating it as a mathematical model. To me, the joy of doing this is not that
 it gives exact answers to life's problems (nor can it), but that it transforms
 them into something solvable.
 
-If only every life problem has a closed form solution! In my mind, they do.
-Except when they don't. Then I cry and eat ice cream, like everyone else. ❤️
+If only every life problem has a closed form solution! In my mind, they do.ove
+Except when they don't. Then I cry and eat ice cream, like everyone else. 

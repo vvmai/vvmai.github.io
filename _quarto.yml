@@ -23,10 +23,6 @@ website:
         href: index.qmd
       - text: "Projects"
         href: pages/neurosymbolic.qmd
-      - text: "Art"
-        href: art/index.qmd
-      - text: "Blog"
-        href: blog/index.qmd
     right:
       - icon: github
         href: https://github.com/vvmai
@@ -38,30 +34,18 @@ website:
     - title: "Projects"
       style: docked
       contents:
-        - section: "Studies"
-          contents:
-            - text: "Neurosymbolic solver for deductive trading"
-              href: pages/neurosymbolic.qmd
-            - text: "Conway's blobs"
-              href: pages/blobsim.qmd
-            - text: "Plotting my next move"
-              href: pages/nyc.qmd
-        - section: "Toys"
-          contents:
-            - text: "Puppy weight predictor"
-              href: pages/puppy.qmd
-            - text: "Quick maths"
-              href: pages/quick-maths.qmd
-            - text: "Is grad school worth it?"
-              href: pages/grad-school.qmd
-    - title: "Art"
-      style: docked
-      contents:
-        - art/index.qmd
-    - title: "Blog"
-      style: docked
-      contents:
-        - blog/index.qmd
+        - text: "Neurosymbolic solver for deductive trading"
+          href: pages/neurosymbolic.qmd
+        - text: "Conway's blobs"
+          href: pages/blobsim.qmd
+        - text: "Plotting my next move"
+          href: pages/nyc.qmd
+        - text: "Puppy weight predictor"
+          href: pages/puppy.qmd
+        - text: "Quick maths"
+          href: pages/quick-maths.qmd
+        - text: "Is grad school worth it?"
+          href: pages/grad-school.qmd
 
 format:
   html:

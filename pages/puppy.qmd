@@ -4,20 +4,20 @@ title: "Puppy weight calculator"
 
 # Estimating mixed puppies' adult weight
 
+::: {layout-ncol=3}
 ![Baby Pippy on his adoption day, June 13, 2022 (3 months old)](/assets/photos/baby_pippy.jpg)
 
 ![Awkward leggy teenage phase (6 months old)](/assets/photos/teen_pip.jpg)
 
 ![Old man Chip (1 year old)](/assets/photos/old_pippy.jpg)
+:::
 
 When I first got Chip, I was looking for a pocketable city dog and was assured by
 the shelter that he was a 'Chiyorkie' mix and wouldn't grow to exceed 15 lbs. I
-knew something was up when I picked him up and he was much bigger than he had
-appeared in the pictures. When I took him to the vet that same day, he was already
-11.4 lbs at 14 weeks old and underweight. For the next 9 months, I would become
-obsessed with estimating his adult weight. I checked his weight religiously and
-made the following toy model. His final adult weight is 29.5–30.0 lbs, so it turns
-out that a sigmoid function is pretty good at capturing puppies' growth (at least
+knew something was up when I picked him up and he was already
+11.4 lbs at 14 weeks old and underweight. For the next 9 months, I checked his weight religiously and
+made the following toy model. His final adult weight is ~30.0 lbs, so it turns
+out that a sigmoid is pretty good at capturing puppies' growth (at least
 with N = 1 🙂).
 
 Edit the `age (wks), weight (lbs)` data below (one pair per line) and the sigmoid
@@ -119,7 +119,7 @@ fit = {
 {
   const grid = Array.from({length: 120}, (_, i) => { const xv = i * maxAge / 119; return {x: xv, y: fit.f(xv)}; });
   return Plot.plot({
-    width: 760, height: 420, marginLeft: 55,
+    width: 760, height: 420, marginLeft: 55, grid: true,
     x: {label: "Age (weeks)", domain: [0, maxAge]},
     y: {label: "Weight (lbs)"},
     marks: [
