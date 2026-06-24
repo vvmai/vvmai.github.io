@@ -101,7 +101,8 @@ fig.add_scatter(x=traj.step, y=traj.population / ss_pop, name="population")
 fig.add_scatter(x=traj.step, y=traj.total_energy / ss_energy, name="total energy (blobs + grid)")
 fig.add_hline(y=1.0, line_dash="dot", line_color="gray")
 fig.update_layout(
-    height=300, margin=dict(l=0, r=0, t=10, b=0), xaxis_title="step",
+    height=300, margin=dict(l=0, r=0, t=10, b=0),
+    xaxis=dict(title="step", range=[0, 200]),
     yaxis=dict(title="value ÷ its own steady level"),
     legend=dict(orientation="h", y=1.12),
 )
@@ -286,13 +287,14 @@ collapses; past ~36 it reliably survives — quantified [below](#how-big-must-th
 ![Small world (18×18): a chance fluctuation kills one species, the cascade fires, and only one colour survives.](/assets/images/blobsim/cyclic_collapse.gif){width="300"}
 :::
 
-![The cyclic world at five steps — domains advance and retreat as each colour eats into the one it dominates.](/assets/images/blobsim/cyclic_frames.png)
+![The cyclic world across the run (t = 3 → 1499) — domains advance and retreat as each colour eats into the one it dominates.](/assets/images/blobsim/cyclic_frames.png)
 
 The population never converges: each population oscillates, peaking after the species
-it eats, all three locked in the same rotation. Two views of that rotation — the
-populations over time (left), and the same whole-grid A:B:C mix drawn step by step as a
-path on a triangle (right), where each corner is "all one species", the centre an even
-split, and colour runs dark (start) → bright (end):
+it eats — measured, each colour lags the one it preys on by **~60 steps**, the same lag
+all the way round (A→B→C→A), which is exactly what a rotation looks like in time. Two
+views of that rotation — the populations over time (left), and the same whole-grid A:B:C
+mix drawn step by step as a path on a triangle (right), where each corner is "all one
+species", the centre an even split, and colour runs dark (start) → bright (end):
 
 ::: {layout-ncol=2}
 ![Populations over the run — sustained, out-of-phase oscillation; each peak chases the prey it eats.](/assets/images/blobsim/cyclic_populations.png)
@@ -325,34 +327,23 @@ and a length measured from the pattern *itself* predicts where that happens. (Th
 lattice version of Reichenbach et al., *Nature* 2007 — coexistence needs the system larger
 than a spiral wavelength.)
 
-### More than three?
-
-Three is the *minimum* cycle, not the only one. So does the trick generalise? I wired up a
-ring of five — A→B→C→D→E→A, each eating the next and eaten by the one before it — scattered
-them at random, and let it run. All five coexist indefinitely, same as the trio: no one is
-strongest, so the rotation never resolves.
+**More than three?**
 
 ![A five-species cycle (72×72): A→B→C→D→E→A. Every colour survives; the lattice packs into a busier, more interleaved mosaic than the three-way version.](/assets/images/blobsim/cyclic_five.gif){width="320"}
 
-What surprised me was the *scale*. I'd assumed more species would mean *finer* domains —
-five colours fighting over the same grid, each squeezed smaller. The opposite happened: the
-single-species domain wavelength measures **λ ≈ 44 cells, larger than the ≈ 33 of the
-three-cycle**. My read (a guess, not proven): splitting the same total occupancy across five
-species instead of three makes each one individually sparser, so its patches spread thinner
-and *wider* rather than smaller. Either way the headline survives — cyclic coexistence isn't
-a special property of three; it's what any odd, balanced ring of "no one is strongest" does,
-and a bigger ring just needs a bigger world to hold it.
+
+ANYWAYS this was a fun project that was long and honestly ambiguously useful in any sort of way. But at least now
 
 ## Gallery
 
 Further simulation runs not featured above, generated from the `blobsim` package.
 
 ::: {layout-ncol=4}
-![Cyclic world — basic omnivore](/assets/images/blobsim/case_basic.gif)
-
 ![Cyclic world — energy-sensing](/assets/images/blobsim/case_energy.gif)
 
 ![Cyclic world — blind omnivore](/assets/images/blobsim/case_blind.gif)
 
 ![Sensing — energy (≡ full: the extra info changes no decisions)](/assets/images/blobsim/sense_energy.gif)
+
+![Asymmetric 3-cycle — one predator over-powered, still coexists](/assets/images/blobsim/asym_3.gif)
 :::
