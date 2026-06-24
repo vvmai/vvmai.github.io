@@ -127,19 +127,20 @@ What isn't in the score table:
 
 Both are facts the table doesn't show: the scheduling produces relationships that are forced yet non-obvious, and the solver just retrieves them.
 
-The same model answers a sharper question — *what is the fewest points that guarantee qualification?* — and the answer can invert the standings entirely. Take a different snapshot: three teams level on 2 (they have drawn each other), with the last-place side still to play all three.
+The same model answers a sharper question — *what is the fewest points that guarantee qualification?* — and the number can sit below what rivals could still reach. Rewind to **after the first round** of group games: Brazil beat Cameroon, Serbia and Switzerland drew, and two rounds are still to play.
 
-| Team | Points | Remaining matches |
-| --- | --- | --- |
-| Brazil | 2 | vs Cameroon |
-| Serbia | 2 | vs Cameroon |
-| Switzerland | 2 | vs Cameroon |
-| Cameroon | 0 | vs Brazil, Serbia, Switzerland |
+| Team | Points | Played | Remaining matches |
+| --- | --- | --- | --- |
+| Brazil | 3 | beat Cameroon | vs Serbia, vs Switzerland |
+| Serbia | 1 | drew Switzerland | vs Brazil, vs Cameroon |
+| Switzerland | 1 | drew Serbia | vs Brazil, vs Cameroon |
+| Cameroon | 0 | lost to Brazil | vs Serbia, vs Switzerland |
 
 ```{python}
 #| echo: false
-points = {"Brazil": 2, "Serbia": 2, "Switzerland": 2, "Cameroon": 0}
-remaining = [("Brazil", "Cameroon"), ("Serbia", "Cameroon"), ("Switzerland", "Cameroon")]
+points = {"Brazil": 3, "Serbia": 1, "Switzerland": 1, "Cameroon": 0}
+remaining = [("Brazil", "Serbia"), ("Brazil", "Switzerland"),
+             ("Cameroon", "Serbia"), ("Cameroon", "Switzerland")]   # the four matches across rounds 2–3
 
 def reachable(points, remaining, t):
     s, final = model(points, remaining); totals = set()
@@ -156,11 +157,10 @@ def fewest_to_clinch(points, remaining, t):
 
 for t in teams:
     n = fewest_to_clinch(points, remaining, t)
-    print(f"{t:12} " + (f"clinches with {n} points" if n is not None
-                        else "cannot clinch — no total is enough"))
+    print(f"{t:12} clinches with {n} points  (can finish on {reachable(points, remaining, t)})")
 ```
 
-The last-place team is the **only** one that can clinch — on just 4 points, without winning out. Because Cameroon plays all three rivals, the very results that hold it to 4 (one win, one draw, one loss) push two of them below it: the side it beats stays on 2, the side it draws climbs only to 3, and only the side that beats Cameroon reaches 5 — one rival above, second place guaranteed. Meanwhile the three teams on 2 can each reach 5 yet none can clinch: if Cameroon loses out they all finish level on 5, a three-way tie for two seats. A standings-based eye backs the teams on points and writes off the one on zero; the solver reads off the opposite.
+The surprise is Brazil's **6** — guaranteed through on six points even though Serbia *and* Switzerland can each still finish on **7, above it**. The escape is hidden in the schedule: the only way either chaser reaches 7 is to win out, and both of their run-ins include the match *against Brazil* — so Brazil reaching 6 means it has already beaten one of them, and the two can't both finish above it. Serbia and Switzerland, by contrast, must win out to their maximum of 7 to be safe; drop a single point and a tie for the second seat survives. Even Cameroon, beaten in its opener, isn't eliminated — it can still clinch, but only by taking all six from its two games. A points-ranking eye reads "leader needs the most insurance"; the solver reads the opposite, because who you still have to play matters more than where you sit.
 
 From here, swap "tournament rules" for "contract rulebooks" and "standings" for "live prices."
 
@@ -282,16 +282,7 @@ measurement* across families; most apparent matches just cite the same news sour
 Expected — the real target is a definitional link between *different* measurements,
 which by construction won't show up in a search for identical ones.
 
-### 4. Scoring every category
-
-A cheap surface-feature score (how native, yes/no, multi-contract, and recurring a
-category is) ranks where to look: top — Entertainment, Politics, Mentions, Sci/Tech;
-bottom — Elections and Climate (number-based) and Economics/Crypto (outside-copied),
-self-consistent with the yes/no rule. The score only flags *where to look*, though: a
-high value means many contracts share an event, **not** that their rulebooks force each
-other — only reading them together (as above) confirms a real link.
-
-### 5. Sports — good structure, killed by other exchanges
+### 4. Sports — good structure, killed by other exchanges
 
 Sports has the best raw structure (many related yes/no bets on one game) and dodges
 the continuous-number trap — but every bet also exists at a sportsbook, which keeps
@@ -302,18 +293,7 @@ a category.
 
 <!-- TODO. -->
 
-### 6. The narrowed hunt — AI-model rankings
-
-A targeted search surfaced two AI-model-ranking series off the same leaderboard, one
-framed **by company** and one **by model**, with the obvious link "a company's chance
-is the sum of its models' chances." It failed three predicted ways: the prices already
-agreed within the spread; the same crowd traded both framings; and the two lists didn't
-line up cleanly. *Lesson: different framing only helps if it attracts two genuinely
-different crowds.*
-
-<!-- TODO. -->
-
-### 7. The life and death of a real arbitrage
+### 5. The life and death of a real arbitrage
 
 The strongest find pairs two contracts that look unrelated by their titles: a **parlay
 on who controls each chamber** (the four House×Senate combinations) and a **direct bet
@@ -335,7 +315,7 @@ forced = s.check() == z3.unsat
 s.pop()
 print("CONTROLH-D  ==  DD ∨ DR  :", "forced (UNSAT of its negation)" if forced else "not forced")
 
-p_DD, p_DR, bid = 0.40, 0.36, 0.78                          # Kalshi asks / direct bid, 2026-06-21
+p_DD, p_DR, bid = 0.40, 0.36, 0.78                          # Kalshi asks / direct bid, 2026-06-22
 gap = round((bid - (p_DD + p_DR)) * 100)
 cost = (1 - bid) + p_DD + p_DR                              # buy NO(direct)+YES(DD)+YES(DR): pays $1 always
 fee = sum(0.07 * p * (1 - p) for p in (1 - bid, p_DD, p_DR)) * 100
@@ -351,33 +331,64 @@ That's the general trap — a *liquid* mispricing is forced tiny, while a *large
 a leg so mispriced it's either untradeable (thin) or merely slow (a speed edge, not a
 logic edge). The profitable middle is squeezed shut.
 
-**Was it real, and how long did it last?** Pulling the three legs' actual price history
-from Kalshi, the gap (direct bid − bundle ask) sat open for about five days:
+**Was it real, and how long did it last?** Pulling the three legs' full daily history
+from Kalshi — since the combo legs began trading in December 2025 — and plotting the gap
+(direct bid − bundle ask) over its whole life:
 
 ```{python}
 #| echo: false
 import plotly.graph_objects as go, plotly.io as pio
+from datetime import date, timedelta
 pio.templates.default = "plotly"
-days = ["Jun 14", "Jun 15", "Jun 16", "Jun 17", "Jun 18", "Jun 19", "Jun 20", "Jun 21", "Jun 22", "Jun 23"]
-gap_c = [0, -1, -1, 0, 2, 1, 1, 2, 2, 0]      # cents, from Kalshi daily candle closes
-fig = go.Figure(go.Bar(x=days, y=gap_c,
-                       marker_color=["#2ca02c" if g > 0 else "#cfcfcf" for g in gap_c]))
-fig.add_hline(y=0, line_color="black")
-fig.update_layout(height=300, margin=dict(l=0, r=0, t=10, b=0), showlegend=False,
+
+# Daily gap = direct YES bid − (DD ask + DR ask), in cents, from Kalshi candle closes.
+# Real history of CONTROLH-2026-D and KXBALANCEPOWERCOMBO-27FEB-{DD,DR}, 2025-12-17 → 2026-06-24
+# (first five post-launch days dropped: combo asks were untradeably wide).
+start = date(2025, 12, 17)
+gaps = [-4, -3, -2, -2, -2, -2, -2, -2, -2, -2, -1, -1, -1, -1, -2, -5, -4, -4, -4, -4, -4, -5,
+        -6, -7, -7, -5, -6, -6, -5, -5, -4, -4, -4, -4, -4, -3, -2, -2, -1, -2, -3, -3, -3, -3,
+        -3, -2, -2, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -3, -4, -4, -4, -7, -8, -9, -7, -7,
+        -3, -5, -5, -5, -5, -3, -3, -3, -5, -5, -5, -4, -3, -1, -1, -2, -2, -2, -3, -5, -4, -3,
+        -4, -4, -4, -2, -3, -3, -2, -3, -2, -2, -2, -2, -2, -1, -1, 0, 0, 2, 0, -1, -1, -1, -1,
+        -1, -5, -2, -4, -5, -5, -2, -1, -3, 0, -1, -1, -2, -2, -2, -1, -1, -2, -3, -3, -1, 0,
+        -1, -1, 0, 0, -1, -1, -1, 1, 1, 0, 1, 0, 1, 1, -1, -1, -1, 0, 0, 0, 0, -1, -1, -2, -1,
+        -1, -1, -2, -1, 0, 1, 1, 1, 0, 1, 0, -1, 0, -1, -1, 0, -1, 1, 0, -1, 0, 0, 0, -1, -1,
+        0, 2, 1, 1, 2, 2, 0]
+dates = [(start + timedelta(days=i)).isoformat() for i in range(len(gaps))]
+pos = [g if g > 0 else None for g in gaps]            # the arbitrage days
+
+fig = go.Figure()
+fig.add_hrect(y0=0, y1=2.6, fillcolor="#2ca02c", opacity=0.06, line_width=0,
+              annotation_text="arbitrage region (direct > bundle)", annotation_position="top left")
+fig.add_trace(go.Scatter(x=dates, y=gaps, mode="lines", line=dict(color="#9aa0a6", width=1.3),
+                         hovertemplate="%{x|%b %d}: %{y:+d}¢<extra></extra>"))
+fig.add_trace(go.Scatter(x=dates, y=pos, mode="markers", marker=dict(color="#2ca02c", size=6),
+                         hovertemplate="%{x|%b %d}: %{y:+d}¢<extra></extra>"))
+fig.add_hline(y=0, line_color="black", line_width=1)
+fig.add_annotation(x="2026-06-21", y=2, text="longest: 5 days (Jun 19–23)",
+                   showarrow=True, arrowhead=2, ax=-55, ay=-28, font=dict(size=11))
+fig.add_annotation(x="2026-04-01", y=2, text="lone 2¢ (Apr 1)",
+                   showarrow=True, arrowhead=2, ax=0, ay=-28, font=dict(size=11))
+fig.update_layout(height=340, margin=dict(l=0, r=0, t=24, b=0), showlegend=False,
                   yaxis_title="direct bid − bundle ask (¢)")
+fig.update_xaxes(dtick="M1", tickformat="%b")
 fig
 ```
 
-Live from roughly **June 18–22, 2026**; then on the 23rd the D-House/R-Senate leg
-repriced 36¢ → 38¢, the bundle rose to 78¢, and the gap vanished. A textbook *temporary*
-edge — real while nobody was reconciling the two framings, gone once the price moved.
+For almost its entire life the gap sat **at or below zero** — the bundle was as cheap as
+or cheaper than the direct contract, exactly as coherence demands — drifting in a −1¢ to
+−4¢ band. It poked into arbitrage territory only in brief, shallow bursts: **eight short
+windows in six months, every one ≤ 2¢ and none lasting more than five days.** Most were a
+single 1¢ day; the two genuine 2¢ events were a lone spike on **Apr 1** (the direct
+contract jumped to 86¢ a day ahead of the bundle, gone the next day when the DD leg
+caught up) and the **Jun 19–23** run analysed above — which closed on Jun 24 when the
+D-House/R-Senate leg repriced 36¢ → 38¢ and the bundle rose to meet the 78¢ bid.
+
+That is the thesis in one picture: a *liquid*, closely-watched relationship never lets
+incoherence grow past a couple of cents or survive a week. The June window wasn't
+special — just the longest of several sub-fee blips. Each was a real, provable
+mispricing; none was large enough to clear the ~4.5¢ round-trip fee.
 (Verified live: the [Balance-of-Power combo legs](https://kalshi.com/markets/kxbalancepowercombo)
 and the "Democrats win the House" market are still open on Kalshi, now coherent.)
 
-## Conclusion
-
-Can't quit my day job — the tools work and Kalshi-native logical mispricings provably
-exist, but none found so far is capturable: each dies to an outside copy, a continuous
-strike, a shared crowd, an untraded leg, or a fee bigger than the gap.
-
-<!-- TODO: your call on next steps. -->
+**Conclusion:** can't quit my day job.

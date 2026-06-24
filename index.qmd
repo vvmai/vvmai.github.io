@@ -3,7 +3,7 @@ title: "What I do and why I do"
 pagetitle: "About"
 ---
 
-![](/assets/photos/IMG_0830.jpg){width="320"}
+![](/assets/photos/IMG_0830.jpg){width="240"}
 
 I'm a prolific producer of abandoned projects. This is my attempt to commit to at
 least some of them. Each page you see is a win against procrastination.

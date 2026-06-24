@@ -94,7 +94,7 @@ config = SimulationConfig(
 sim = Simulation(config)
 traj = pd.DataFrame([
     {"step": s.step, "population": s.n_alive, "total_energy": s.e_blobs + s.e_grid}
-    for s in sim.iterate(steps=200)
+    for s in sim.iterate(steps=500)
 ])
 
 fig = go.Figure()
@@ -130,10 +130,13 @@ $$E[\tau] \;=\; \frac{E_0 - B}{E[c]} \;+\; \frac{B}{M} \;+\; (\text{boundary cor
 
 with starting energy $E_0$, resting cost $M$, average active cost $E[c]$, and the
 affordability threshold $B$ below which moving is no longer possible. For the test
-parameters this predicts **≈ 186 steps**. Across 50 independent runs the observed
-lifespans cluster tightly around the prediction (mean ≈ 185):
+parameters this predicts **≈ 186 steps**, and the simulation agrees. But one match could
+be luck, so I varied the starting energy and the movement cost across ten settings and
+compared each one's *predicted* lifespan to its *observed* mean. Every point lands on the
+$y = x$ line — the formula tracks the simulation across the whole range, not just at one
+spot:
 
-![Lifespan over 50 lone-blob runs. The distribution sits right on the closed-form prediction (red), with observed mean (black dashed) ≈ 185.](/assets/images/blobsim/bench_lifespan.png)
+![Observed mean lifespan vs. the closed-form prediction, across ten parameter settings (20 runs averaged per point). Every point sits on the dashed y=x line, so the formula holds across conditions — not a one-off coincidence.](/assets/images/blobsim/bench_lifespan.png)
 
 <!-- TODO: why the two-phase split, in your words. -->
 
@@ -147,10 +150,24 @@ within
 $$T_\text{max} = \left\lceil E_0 / m \right\rceil$$
 
 steps — and reproduction can't postpone it, because offspring are funded from parents
-(energy only moves, it isn't created). And it isn't a one-off: across many seeds every
-finite-grid run climbs, then collapses to zero without exception.
+(energy only moves, it isn't created).
 
-![Twelve independent finite-grid runs — every one reaches zero. Extinction isn't a quirk of one seed; it's guaranteed by the energy budget.](/assets/images/blobsim/bench_extinction.png)
+$T_\text{max}=E_0/m$ is a **ceiling**: it's how long the energy lasts if every joule goes
+to the cheapest possible upkeep — the metabolic cost $m$ per step. A blob that only
+*rests* spends exactly that, so it hits the ceiling precisely; a blob that also *moves*
+spends more and dies sooner. Sweeping $E_0$ and $m$, the resters land right on the line
+and the movers fall below it — extinction always lands *within* $T_\text{max}$, never past
+it:
+
+![Observed extinction step vs. the ceiling T = E₀/m. Blobs that only rest spend exactly m/step and hit the ceiling (purple, on the line); blobs that also move spend more and die sooner (orange, below). Nothing reaches the grey zone above the line — extinction is always within the bound.](/assets/images/blobsim/bench_extinction_time.png)
+
+Add foraging and reproduction and $T_\text{max}$ loosens into an upper bound (blobs can't
+share energy, so they die *sooner* than the worst case), but extinction stays
+*guaranteed*: with no source the world's total energy only ever falls (left below), so
+even a population that *booms* first (right) is only reshuffling a shrinking pool — once
+it's drawn down, everyone starves.
+
+![Left: total energy (blobs + grid) over eight runs — it only ever falls, since nothing replenishes it. Right: population booms to ~390, then crashes to zero by ~step 35. Reproduction redistributes energy but can't create it.](/assets/images/blobsim/bench_extinction.png)
 
 <!-- TODO. -->
 
@@ -171,12 +188,14 @@ energy is replenished — the difference is the environment, not the blobs. -->
 ### Carrying capacity
 
 **The rule.** When the grid replenishes, the population settles where energy coming in
-balances energy spent. Equating the two gives a predicted stable size
+balances energy spent — so there's a single *carrying capacity* the world returns to from
+any starting density. Balancing the two flows gives a back-of-the-envelope estimate
 
-$$N^* \approx \frac{\text{rate}\times(\text{cells})}{\text{rate} + \text{avg cost per blob}} \approx 106.$$
+$$N^* \approx \frac{\text{rate}\times(\text{cells})}{\text{rate} + \text{avg cost per blob}} \approx 106,$$
 
-Starting from very crowded and very sparse, both runs converge to roughly the same
-level — evidence it's a genuine attractor, not an artifact of where you start.
+but this one is *not* exact like the lifespan formula above — it's a mean-field guess that
+comes in ~25% low (more on why below). The claim worth testing is the **attractor**:
+crowded and sparse starts should both end up at the same level, wherever that level is.
 
 ::: {layout-ncol=2}
 ![Sparse start — grows toward the steady level.](/assets/images/blobsim/sc5_sparse.gif)
@@ -184,13 +203,18 @@ level — evidence it's a genuine attractor, not an artifact of where you start.
 ![Crowded start — relaxes down to the same level.](/assets/images/blobsim/sc5_dense.gif)
 :::
 
-Across many runs of each kind, both starting densities collapse onto the *same* band
-within ~30 steps — sparse runs rising into it, dense runs falling into it — which is the
-signature of a genuine attractor. (It settles a little *above* the simple $N^*$ line — an
-expected overshoot: the formula assumes the blobs are perfectly mixed, but real ones
-spread out, so fewer of their moves collide and get wasted and a few more survive.)
+To show it's a genuine *attractor* — a level the world returns to no matter where it
+starts — I swept the starting population from 10 to 200 and measured where each run
+settles (mean of its last 300 steps). The result is flat: every start lands near the same
+equilibrium (~133), nowhere near the dotted $y = x$ line a "stays where it began" world
+would follow. That flatness is the carrying capacity, and it sits near **133**, not 106.
+The gap is the formula's one shortcut: it assumes a blob pays the move cost almost every
+step (the $\tfrac{8}{9}$ in "avg cost per blob"). Real blobs idle far more — resting when
+low on energy, or when no move helps — so their true upkeep is lower, and lower upkeep
+supports more of them. The mean-field gets the *scale* right; it's the assumed move rate
+that makes the exact number ~25% low.
 
-![Smoothed population over many runs. Sparse starts (blue, from 10) rise and dense starts (orange, from 300) fall onto one common band — the same attractor regardless of where you start. Dashed line is the mean-field prediction N* ≈ 106.](/assets/images/blobsim/bench_carrying.png)
+![Equilibrium population vs. starting population. From starts spanning 10–200, every run settles near one level (~133) — far off the y=x line — which is what makes it an attractor. The mean-field estimate N* ≈ 106 (red dashed) runs ~25% low.](/assets/images/blobsim/bench_carrying.png)
 
 <!-- TODO: the surprise — observed settles ~25% above the prediction, because the
 mean-field math assumes blobs are well-mixed; real blobs cluster and spread out, so
@@ -202,7 +226,7 @@ fewer of their moves collide and get wasted. -->
 spends, so its energy climbs quickly to the maximum it can hold and then stays pinned
 there — steady, with essentially no variation. Several runs, same story every time:
 
-![Energy of a lone blob across several runs — each shoots to the maximum it can hold (20) within a few steps and stays pinned.](/assets/images/blobsim/bench_lone_energy.png)
+![Energy of a lone blob across several runs — each climbs to the maximum it can hold (here 60) within ~15 steps and stays pinned.](/assets/images/blobsim/bench_lone_energy.png)
 
 <!-- TODO. -->
 
@@ -251,7 +275,7 @@ take over. Greater efficiency compounds into dominance.
 
 ## Emergent behavior
 
-My primary interest was in discovering strong emergence (after having verified weak emergence). Coexistence niches, non-obvious optimization strategies, and other non-predictable patterns that arise from the interaction of simple rules. 
+My primary interest was in discovering non-obvious emergence. Coexistence niches, non-obvious optimization strategies, and other patterns that arise from the interaction of simple rules. 
 
 ### Predation
 
@@ -267,11 +291,20 @@ dividing line forever circling.
 
 The missing ingredient is a **cycle of three**: A eats B, B eats C, C eats A — rock,
 paper, scissors. Now no one is strongest, and from a random scatter the grid
-spontaneously sorts itself into travelling patches that chase each other forever:
+spontaneously sorts itself into travelling patches that chase each other forever — but
+only when the world is big enough. Coexistence is a *spatial* effect: the three survive
+because the rotating patches keep them apart. Shrink the grid and a single chance
+extinction cascades — one species loses its only predator, booms, and wipes out the
+third — collapsing the cycle to a single colour. (Below ~20 cells a side it almost always
+collapses; past ~36 it reliably survives — quantified [below](#how-big-must-the-world-be).)
 
-![Three omnivores in a cycle (A eats B, B eats C, C eats A) self-organise into rotating domains — each colour endlessly eating into the next and being eaten from behind.](/assets/images/blobsim/cyclic_ouroboros.gif){width="320"}
+::: {layout-ncol=2}
+![Big world (60×60): the three sort into rotating domains, each colour endlessly eating into the next and eaten from behind.](/assets/images/blobsim/cyclic_ouroboros.gif){width="300"}
 
-![The cyclic world at five steps — domains advance and retreat as each colour eats into the one it dominates.](/assets/images/blobsim/cyclic_frames.png){width="320"}
+![Small world (22×22): a chance fluctuation kills one species, the cascade fires, and only one colour survives.](/assets/images/blobsim/cyclic_collapse.gif){width="300"}
+:::
+
+![The cyclic world at five steps — domains advance and retreat as each colour eats into the one it dominates.](/assets/images/blobsim/cyclic_frames.png)
 
 The population never converges: each population oscillates, peaking after the species
 it eats, all three locked in the same rotation. Two views of that rotation — the
@@ -290,32 +323,25 @@ The system never diverges into corners (no species ever wins) and never reaches 
 <!-- TODO: your own read — why the 3-cycle rotates and the 2-cycle can't (chirality / no
 cyclic dominance), and whatever you find most striking watching the gif. -->
 
-### The ouroboros is fragile to size
+### How big must the world be?
 
-The cyclic coexistence isn't guaranteed — it **depends on the world being big enough**.
-Coexistence is a *spatial* effect: the three only persist because the rotating patches
-keep them locally separated. Shrink the grid and random fluctuations let one species
-vanish — and then the cycle breaks catastrophically. Say C dies out; now A has lost its
-only predator (C ate A), so A grows unchecked and drives B extinct too. Three becomes
-one. The tail-eating snake eats *itself*.
+That collapse in a small world isn't arbitrary — it has a length scale. Coexistence is a
+spatial trick: the three only survive because the rotating domains keep them apart, so the
+grid has to be big enough to *hold* a full domain. Below that, a chance fluctuation wipes
+out one species before the pattern can stabilise, and the cascade finishes the rest.
 
-Running the same setup at different grid sizes (5 seeds each), and asking how often all
-three survive to step 600, gives a sharp transition around ~32 cells a side:
+So the prediction is that the minimum grid size is set by the **domain wavelength** $\lambda$
+— the natural width of one rotating patch. I measured $\lambda$ independently, from the
+spatial autocorrelation of a single species on a large (70×70) grid: $\lambda \approx 33$
+cells. Then I swept the grid size and measured how often all three survive:
 
-![Fraction of runs keeping all three species, versus grid size. Below ~30 the cycle collapses to a monoculture; above ~45 all three reliably coexist.](/assets/images/blobsim/cyclic_finite_size.png)
+![Survival vs. grid size (10 seeds each). Coexistence is near-impossible below ~20, turns on through the mid-20s, and is reliable past ~36. The independently-measured wavelength λ ≈ 33 (blue dashed) lands right where coexistence becomes reliable.](/assets/images/blobsim/cyclic_finite_size.png){width="460"}
 
-The two regimes look completely different on the grid — a small world is eaten down to a
-single colour, while a large one sustains the rotation indefinitely:
-
-::: {layout-ncol=2}
-![Small world (22×22) — diversity collapses to one survivor.](/assets/images/blobsim/cyclic_collapse.gif){width="320"}
-
-![Large world (60×60) — all three coexist, chasing forever.](/assets/images/blobsim/cyclic_ouroboros.gif){width="320"}
-:::
-
-This is the grid version of a known result in cyclic competition (Reichenbach *et al.*,
-*Nature* 2007): all three survive only when the world is bigger than a single rotating
-patch — one spiral's width. Below that, chance picks a winner and diversity is lost.
-
-<!-- TODO: your own read on why bigger = more robust (independent patches buffering
-fluctuations), if you want to expand it. -->
+The match is real but soft: $\lambda \approx 33$ lands at the top of the transition, where
+survival crosses into reliable — not at a single razor edge. That's expected. Unlike
+$E_0/m$ or $N^*$, this threshold isn't a closed form in the parameters; it's an *emergent*
+scale, and the transition is a probabilistic band several cells wide, not a step. But the
+headline holds: the world has to be about one spiral wide for the ouroboros to survive,
+and a length measured from the pattern *itself* predicts where that happens. (This is the
+lattice version of Reichenbach et al., *Nature* 2007 — coexistence needs the system larger
+than a spiral wavelength.)
