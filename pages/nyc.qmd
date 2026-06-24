@@ -192,7 +192,7 @@ choropleth(X, 'restaurants')
 ## Overall score
 
 Since the number of trees happened to distinguish residential areas well, I weigh
-it twice as much as the other two to break up the Manhattan monolith.
+it twice as much as the other two combined to break up the Manhattan monolith.
 
 ```{python}
 X['overall_score'] = (2 * X['trees'] + 0.5 * X['centrality_metric'] + 0.5 * X['restaurants']) / 3

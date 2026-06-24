@@ -18,7 +18,7 @@ prove when two+ contracts' prices contradict each other. A proven contradiction
 is a risk-free trade. The arbitrage, if found, lives within the fine print
 no one bothers to read.
 
-Two things had to arrive together: **markets that trade yes/no claims** (SAT solvers are irreducibly boolean solvers), and **cheap reading of dense legal text** (LLMs).
+Two things had to arrive together: **markets that trade yes/no claims** (so the logical couplings between contracts are boolean), and **cheap reading of dense legal text** (LLMs).
 
 **Induction** learns patterns from data ("it went up the last ten times") — what
 essentially all quantitative trading does. **Deduction** proves something *must*
@@ -106,7 +106,7 @@ What isn't obvious from the score table:
   sit on 3 and could climb to 6, but they play *each other*, so at
   most one gets there and the other is left behind. No set of results puts two teams
   above Brazil, so it is through even if it loses to Cameroon.
-- **Cameroon is eliminated even if it beats Brazil.** A win lifts it only to 4, and the
+- **Cameroon is eliminated even if it beats Brazil.** A win lifts it only to 3, and the
   Serbia–Switzerland game always leaves two teams ahead — so its fate is sealed by a
   match it isn't even in.
 
