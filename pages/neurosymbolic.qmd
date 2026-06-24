@@ -18,8 +18,6 @@ formal logic, then hand the logic (DSL) to an automated theorem-prover (an SMT s
 is a guaranteed-profit trade. The edge, if there is one, comes from reading fine print
 no one actually looks at — not from robbing AWS's closest regional compute clusters.
 
-<!-- TODO: your framing / why this caught your interest. -->
-
 Two things had to arrive together: **markets that trade yes/no claims** (logic needs
 true/false statements to work on), and **cheap reading of dense legal text** (turning
 exception-riddled fine print into clean structure used to take a human per contract;
@@ -37,8 +35,6 @@ is **coherence** — whether a set of prices contradict each other right now. Th
 checked today, predicting nothing. Trust comes from a **division of labor**: the
 language model does only the fuzzy part (reading and translating); everything with a
 provably-correct answer goes to the solver.
-
-<!-- TODO. -->
 
 ## Example scenario
 
@@ -182,8 +178,6 @@ where $C_\text{cluster}$ is the cost to examine one group, $V_\text{find}$ the p
 per find (capped by how much the market can absorb), and $R$ how many times one
 discovery pays off.
 
-<!-- TODO: anything you want to draw out about the architecture. -->
-
 ## The golden case
 
 A few attributes have been identified to be necessary (but not sufficient) for a mispricing to be *provable* and *tradeable*:
@@ -263,8 +257,6 @@ In a 20-contract sample, about half had a gap between headline and fine print; *
 were tradeable** (each gap was harmless or already priced). Reading one contract is
 easy, so the edge is gone.
 
-<!-- TODO. -->
-
 ### 2. Economics & finance — almost certainly dead
 
 Nearly every economics/finance contract also trades elsewhere (rate futures, yields,
@@ -290,8 +282,6 @@ the set priced. *Sports is economics with a yes/no coat of paint.* No category h
 "native + hidden + recurring" all at once, so the target is a rare specific **pair** of
 contracts, not a whole category — which is why a targeted hand-search beats betting on
 a category.
-
-<!-- TODO. -->
 
 ### 5. The life and death of a real arbitrage
 
