@@ -30,6 +30,10 @@ Thumbs.db
 !photos/*.png
 # frozen matplotlib figures must be committed for CI
 !_freeze/**/*.png
+# curated site assets are tracked (charts/GIFs generated from the blobsim
+# package — see assets/images/blobsim/PROVENANCE.md — then committed so they
+# deploy; the *.png rule above must not swallow them)
+!assets/**
 
 # Build output
 _site/
