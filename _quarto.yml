@@ -55,4 +55,4 @@ format:
 execute:
   # Heavy Python cells (NYC, blobsim) execute locally once; outputs cached in
   # _freeze/ (committed) so CI deploys without geopandas/blobsim or the raw data.
-  freeze: auto
+  freeze: true
