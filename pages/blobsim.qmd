@@ -189,12 +189,11 @@ any starting density. Balancing the two flows gives
 $$N^* \approx \frac{\text{rate}\times\text{cells}}{\text{rate} + \bar e},$$
 
 where $\bar e$ is the average energy a blob spends per step. The structure is right, but the
-answer is only as good as $\bar e$ — and that's the catch. Guess it crudely (assume a blob
-moves almost every step, $\bar e \approx 0.28$) and you get $N^* \approx 106$; use the
-*measured* upkeep ($\bar e \approx 0.18$ — blobs actually idle most of the time) and you get
-$N^* \approx 143$. The truth sits between, at **~133**. So unlike the lifespan formula this
-one isn't exact in the parameters: $\bar e$ is itself emergent, and predicting it is the
-hard part (more below). The claim worth testing is the **attractor**:
+answer is only as good as $\bar e$ — and that's the catch, because $\bar e$ is itself
+emergent. Plugging in the *measured* upkeep ($\bar e \approx 0.18$ — blobs idle most of the
+time, moving only ~40% of steps) gives $N^* \approx 143$, close to the measured truth of
+**~133**. So unlike the lifespan formula this one isn't exact in the parameters: predicting
+$\bar e$ is the hard part (more below). The claim worth testing is the **attractor**:
 crowded and sparse starts should both end up at the same level, wherever that level is.
 
 Plotting raw runs over time shows what "settles" really means here. The population doesn't
@@ -212,12 +211,14 @@ So the right way to ask "is there an attractor?" is about the *mean* of that osc
 not a fixed point. I swept the starting population from 10 to 200 and measured each run's
 mean over its last 300 steps. The result is flat: every start lands near the same level
 (~133), nowhere near the dotted $y = x$ line a "stays where it began" world would follow —
-that flatness *is* the carrying capacity. What lands it at 133 rather than the crude 106 is
-$\bar e$: measured, blobs move only **~40%** of steps (not the ~90% the naive estimate
-assumed), so they cost less and more of them fit. The remaining slack up to 143 is a
-second, smaller approximation — not every empty cell regrows, since some are already full.
+that flatness *is* the carrying capacity. The formula's $N^* \approx 143$ slightly
+*overshoots* it, and for a concrete reason: the inflow term assumes every cell regrows at
+the full `rate` each step, but a cell already at `capacity` absorbs nothing — with a living
+population the grid is partly saturated, so the real food supply is smaller and supports
+fewer blobs. That second effect, which has no clean closed form, pulls the true level down
+to **~133**.
 
-![Mean population (last 300 steps) vs. starting population; error bars are the oscillation amplitude (±1 SD), which is large. From starts spanning 10–200 the mean is flat near 133 — far off the y=x line — so the *time-average* is a genuine attractor, even though each run swings widely (~60–200) around it. The naive estimate N* ≈ 106 (red dashed) runs ~25% low.](/assets/images/blobsim/bench_carrying.png)
+![Mean population (last 300 steps) vs. starting population; error bars are the oscillation amplitude (±1 SD), which is large. From starts spanning 10–200 the mean is flat near 133 — far off the y=x line — so the *time-average* is a genuine attractor, even though each run swings widely (~60–200) around it. The formula estimate N* ≈ 143 (red dashed), using the measured upkeep, slightly overshoots the true ~133.](/assets/images/blobsim/bench_carrying.png)
 
 ### A lone blob's energy
 
@@ -323,3 +324,49 @@ headline holds: the world has to be about one spiral wide for the ouroboros to s
 and a length measured from the pattern *itself* predicts where that happens. (This is the
 lattice version of Reichenbach et al., *Nature* 2007 — coexistence needs the system larger
 than a spiral wavelength.)
+
+### More than three?
+
+Three is the *minimum* cycle, not the only one. So does the trick generalise? I wired up a
+ring of five — A→B→C→D→E→A, each eating the next and eaten by the one before it — scattered
+them at random, and let it run. All five coexist indefinitely, same as the trio: no one is
+strongest, so the rotation never resolves.
+
+![A five-species cycle (72×72): A→B→C→D→E→A. Every colour survives; the lattice packs into a busier, more interleaved mosaic than the three-way version.](/assets/images/blobsim/cyclic_five.gif){width="320"}
+
+What surprised me was the *scale*. I'd assumed more species would mean *finer* domains —
+five colours fighting over the same grid, each squeezed smaller. The opposite happened: the
+single-species domain wavelength measures **λ ≈ 44 cells, larger than the ≈ 33 of the
+three-cycle**. My read (a guess, not proven): splitting the same total occupancy across five
+species instead of three makes each one individually sparser, so its patches spread thinner
+and *wider* rather than smaller. Either way the headline survives — cyclic coexistence isn't
+a special property of three; it's what any odd, balanced ring of "no one is strongest" does,
+and a bigger ring just needs a bigger world to hold it.
+
+## Gallery
+
+Further simulation runs not featured above, generated from the `blobsim` package.
+
+::: {layout-ncol=4}
+![Dense start → carrying capacity](/assets/images/blobsim/sc5_dense.gif)
+
+![Cyclic world — basic omnivore](/assets/images/blobsim/case_basic.gif)
+
+![Cyclic world — energy-sensing](/assets/images/blobsim/case_energy.gif)
+
+![Cyclic world — blind omnivore](/assets/images/blobsim/case_blind.gif)
+
+![Sensing — basic](/assets/images/blobsim/sense_basic.gif)
+
+![Sensing — energy](/assets/images/blobsim/sense_energy.gif)
+
+![Sensing — full](/assets/images/blobsim/sense_full.gif)
+
+![Asymmetric 3-cycle — A overpowered, still coexists](/assets/images/blobsim/asym_3.gif)
+
+![Asymmetric 3-cycle — denser grid](/assets/images/blobsim/asym_3_dense.gif)
+
+![Basic omnivore — denser grid](/assets/images/blobsim/case_basic_dense.gif)
+
+![Blind omnivore — denser grid](/assets/images/blobsim/case_blind_dense.gif)
+:::
