@@ -3,15 +3,15 @@ title: "What I do and why I do"
 pagetitle: "About"
 ---
 
-![](/assets/photos/IMG_0830.jpg){width="240"}
+![](/assets/photos/IMG_0830.jpg){width="240" .float-start .me-4 .mb-3}
 
 I'm a prolific producer of abandoned projects. This is my attempt to commit to at
 least some of them. Each page you see is a win against procrastination.
 
 Whenever I am faced with a big life decision or dilemma, I gravitate towards
-formulating it as a mathematical model. To me, the joy of doing this is not that
+formulating it as a mathematical model. The joy of doing this is not that
 it gives exact answers to life's problems (nor can it), but that it transforms
 them into something solvable.
 
-If only every life problem has a closed form solution! In my mind, they do.ove
+If only every life problem has a closed form solution! In my mind, they do.
 Except when they don't. Then I cry and eat ice cream, like everyone else. 

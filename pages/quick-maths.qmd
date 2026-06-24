@@ -68,3 +68,4 @@ viewof sleepHours = Inputs.number({label: "Sleep per night (hr)", min: 0, max: 2
 
 ${compared}`;
 }
+```

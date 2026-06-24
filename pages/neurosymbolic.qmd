@@ -5,45 +5,34 @@ jupyter: brainvomit
 
 ## Thesis
 
-A prediction market sells **contracts** that pay \$1 if some stated thing happens and
-\$0 if it doesn't, so the price doubles as the crowd's guess at the probability. The
-familiar ways to make risk-free money here — prices that don't add up, or the same bet
-going cheaper on another site — get cleaned out in seconds once the megafunds
-arrive. That race goes to whoever is fastest, and I am not fastest.
+A prediction market sells **contracts** that pay \$1 if some speculatory thing happens and
+\$0 if it doesn't, so the price is the market's economic estimate of the probability. The
+known ways to make risk-free money here -- prices that don't add up, or the same bet
+going cheaper on another site -- get washed instantaneously once the megafunds
+arrive. As a bottomfeeder, I relinquished hope for a different kind of arbitrage altogether.
 
-As a bottomfeeder, I went looking for a different kind of arbitrage, one you find via **reasoning**. Every contract has a **rulebook** — the precise legal text that decides who
-gets paid. The idea was to have a language model read those rulebooks and translate them into
-formal logic, then hand the logic (DSL) to an automated theorem-prover (an SMT solver) that can
-*prove* when two or more contracts' prices contradict each other. A proven contradiction
-is a guaranteed-profit trade. The edge, if there is one, comes from reading fine print
-no one actually looks at — not from robbing AWS's closest regional compute clusters.
+Every contract has stated **terms**, the legal authority that decides who
+gets paid. The idea: have a language model read those terms and translate them into
+formal logic, then hand the logic (DSL) to an automated theorem-prover (SMT solver) that can
+prove when two+ contracts' prices contradict each other. A proven contradiction
+is a risk-free trade. The arbitrage, if found, lives within the fine print
+no one bothers to read.
 
-Two things had to arrive together: **markets that trade yes/no claims** (logic needs
-true/false statements to work on), and **cheap reading of dense legal text** (turning
-exception-riddled fine print into clean structure used to take a human per contract;
-language models made it cheap at scale).
+Two things had to arrive together: **markets that trade yes/no claims** (SAT solvers are irreducibly boolean solvers), and **cheap reading of dense legal text** (LLMs).
 
 **Induction** learns patterns from data ("it went up the last ten times") — what
 essentially all quantitative trading does. **Deduction** proves something *must*
 follow from rules ("if one party controls the House, the Speaker is necessarily from
-that party"). Prediction markets are the first asset class where deduction bites,
-because they trade true/false claims that can logically depend on one another.
+that party"). Prediction markets are the first asset class where deductive incongruence is exploitable,
+because they trade boolean claims that are logically coupled.
 
 There's also a reason we *must* stay with deduction: a market event happens once, and
 for a one-time event a single "true probability" is ill-defined. What *is* well-defined
-is **coherence** — whether a set of prices contradict each other right now. That can be
-checked today, predicting nothing. Trust comes from a **division of labor**: the
-language model does only the fuzzy part (reading and translating); everything with a
-provably-correct answer goes to the solver.
+is **coherence** — whether a set of prices contradict each other right now.
 
 ## Example scenario
 
-A more intuitive and topical example: a World Cup group is four teams in a round robin — a win is worth 3
-points, a draw 1, a loss 0, and the top two advance. Encode those rules once, drop in
-the table so far, and the solver reads off things the table itself hides.
-
-Going into the final round (illustrative): Brazil leads, and the two chasers — Serbia
-and Switzerland, level on points — happen to **play each other**.
+A more intuitive and topical example: consider the following World Cup final round schedule:
 
 | Team | Points | Final match |
 | --- | --- | --- |
@@ -52,7 +41,7 @@ and Switzerland, level on points — happen to **play each other**.
 | Switzerland | 3 | vs Serbia |
 | Cameroon | 0 | vs Brazil |
 
-The whole model is four lines of logic:
+The encoded boolean model is simply:
 
 - **each remaining match** is one unknown — home win / draw / away win — paying
   `(3, 0)` / `(1, 1)` / `(0, 3)`;
@@ -65,7 +54,7 @@ The whole model is four lines of logic:
   `UNSAT(finish on ≥ P and 2+ rivals still at or above)` holds: the lowest total that
   guarantees a top-two seat. If no reachable `P` works, the team can't clinch at all.
 
-You can also pin a single result and re-ask. Running it on the snapshot:
+Running the solver on this scenario:
 
 ```{python}
 #| echo: false
@@ -111,19 +100,19 @@ cameroon_wins = lambda res: res[("Brazil", "Cameroon")] == 0
 print("\nCameroon eliminated even if it beats Brazil:",
       eliminated(points, remaining, "Cameroon", force=cameroon_wins))
 ```
-What isn't in the score table:
+What isn't obvious from the score table:
 
 - **Brazil has clinched before its own match.** Serbia and Switzerland each
-  sit on 3 and could climb to 6, level with Brazil — but they play *each other*, so at
+  sit on 3 and could climb to 6, but they play *each other*, so at
   most one gets there and the other is left behind. No set of results puts two teams
   above Brazil, so it is through even if it loses to Cameroon.
 - **Cameroon is eliminated even if it beats Brazil.** A win lifts it only to 4, and the
   Serbia–Switzerland game always leaves two teams ahead — so its fate is sealed by a
   match it isn't even in.
 
-Both are facts the table doesn't show: the scheduling produces relationships that are forced yet non-obvious, and the solver just retrieves them.
+Both are facts the table doesn't show: the scheduling produces relationships that are forced yet non-obvious, and the solver just retrieves them. The same model can be used to answer another question: *what is the fewest points that guarantee qualification?*
 
-The same model answers a sharper question — *what is the fewest points that guarantee qualification?* — and the number can sit below what rivals could still reach. Rewind to **after the first round** of group games: Brazil beat Cameroon, Serbia and Switzerland drew, and two rounds are still to play.
+Rewind to just **after the first round** of group games: Brazil beat Cameroon, Serbia and Switzerland drew, and two rounds remain outstanding:
 
 | Team | Points | Played | Remaining matches |
 | --- | --- | --- | --- |
@@ -156,14 +145,14 @@ for t in teams:
     print(f"{t:12} clinches with {n} points  (can finish on {reachable(points, remaining, t)})")
 ```
 
-The surprise is Brazil's **6** — guaranteed through on six points even though Serbia *and* Switzerland can each still finish on **7, above it**. The escape is hidden in the schedule: the only way either chaser reaches 7 is to win out, and both of their run-ins include the match *against Brazil* — so Brazil reaching 6 means it has already beaten one of them, and the two can't both finish above it. Serbia and Switzerland, by contrast, must win out to their maximum of 7 to be safe; drop a single point and a tie for the second seat survives. Even Cameroon, beaten in its opener, isn't eliminated — it can still clinch, but only by taking all six from its two games. A points-ranking eye reads "leader needs the most insurance"; the solver reads the opposite, because who you still have to play matters more than where you sit.
+The surprise is Brazil's **6** — guaranteed through on six points even though Serbia *and* Switzerland can each still finish on **7, above it**. The escape is hidden in the schedule: the only way either chaser reaches 7 is to win out, and both of their run-ins include the match *against Brazil* — so Brazil reaching 6 means it has already beaten one of them, and the two can't both finish above it. Serbia and Switzerland, by contrast, must win out to their maximum of 7 to be safe; drop a single point and a tie for the second seat survives. Even Cameroon, beaten in its opener, isn't eliminated — it can still clinch, but only by taking all six from its two games.
 
 From here, swap "tournament rules" for "contract rulebooks" and "standings" for "live prices."
 
 ## Strategy
 
-The expensive step — carefully reading a rulebook, turning it into logic, checking it
-with the solver — is spent only on promising candidates, picked out first by cheap heuristics:
+The expensive step -- carefully reading legal text, turning it into logical statements, checking them
+with the solver -- is spent only on promising candidates, identified first by cheap heuristics:
 
 1. liquity check: is it actually being traded?
 2. encode terms into logical statements, then check the solver for USNATs
@@ -176,11 +165,11 @@ $$p_1 = \frac{C_\text{cluster}}{V_\text{find}\times R}$$
 
 where $C_\text{cluster}$ is the cost to examine one group, $V_\text{find}$ the profit
 per find (capped by how much the market can absorb), and $R$ how many times one
-discovery pays off.
+discovery pays off (repeatability.)
 
 ## The golden case
 
-A few attributes have been identified to be necessary (but not sufficient) for a mispricing to be *provable* and *tradeable*:
+A few attributes have been identified to be necessary (but not sufficient) for a mispricing to be *tradeable*:
 1. The relationship must be logically forced by the legal terms
 2. **True no matter how the world turns out**; unintuitively, outcomes are not determined by the premise but by the fine print of the rulebooks. This is where bet resolution becomes debatable.
 3. **hidden across contracts**: visible only
@@ -190,22 +179,16 @@ by reading two or more together; ie the contradiction is not within itself (too 
 
 One rule decides the "true no matter what"
 condition: **a forced link survives when both contracts resolve on a yes/no event and
-breaks the moment either resolves on a continuous number.
-
-** A continuous strike (a vote share, an inflation reading) makes the exact number the operative fact, so for some values the implication between two contracts simply fails. A yes/no fact (a law passed, a person appointed) is shared verbatim, so the implication holds automatically.
+breaks the moment either resolves on a continuous number. ** A continuous strike (a vote share, an inflation reading) makes the exact number the operative fact, so for some values the implication between two contracts simply fails. A yes/no fact (a law passed, a person appointed) is shared verbatim, so the implication holds automatically.
 
 ## From rulebook to proof
 
-The fuzzy half (reading) and the provable half (checking) are kept strictly apart.
-Here is the whole pipeline on real contracts.
-
-**A clause becomes one formal statement.** A real Fed contract reads:
+The fuzzy half (reading) and the provable half (checking) are kept strictly apart. For example, a real Fed contract reads:
 
 > "If the upper bound of the target federal funds rate … is greater than 5.25%
 > following the Fed's Mar 2026 meeting, then the market resolves Yes."
 
-The model's only job is to turn that sentence into a typed comparison, tagged with a
-**grounding** naming what the resolver actually reads:
+The model's only job is to turn that sentence into a strutctured representation:
 
 ```json
 { "ticker": "KXFED-26MAR-T5.25",
@@ -213,8 +196,7 @@ The model's only job is to turn that sentence into a typed comparison, tagged wi
   "grounding": "adjudicator" }
 ```
 
-A deterministic step then lowers that into the solver's language (SMT) — a real-valued
-variable and one assertion:
+A deterministic step (DSL) then lowers that into the solver's language (SMT):
 
 ```scheme
 (declare-const level@26MAR Real)
@@ -251,13 +233,13 @@ number sits between the contracts.
 
 ## Findings
 
-### 1. Single contracts — dead end
+### 1. Single contracts — dead 
 
 In a 20-contract sample, about half had a gap between headline and fine print; **none
 were tradeable** (each gap was harmless or already priced). Reading one contract is
 easy, so the edge is gone.
 
-### 2. Economics & finance — almost certainly dead
+### 2. Economics & finance — effectively dead
 
 Nearly every economics/finance contract also trades elsewhere (rate futures, yields,
 official series), where professionals keep it priced — the **outside-copy killer**.
@@ -267,7 +249,7 @@ Kalshi. The fertile ground is the native side — **politics and legal events
 especially**, where one official ruling gets described across very different contracts
 and the link hides in the fine print.
 
-### 3. Contracts about the exact same number — barely exist
+### 3. Contracts about the exact same number — rare
 
 A 165-contract scan found essentially zero genuine matches on the *literal same
 measurement* across families; most apparent matches just cite the same news source.

@@ -34,6 +34,8 @@ Thumbs.db
 # package — see assets/images/blobsim/PROVENANCE.md — then committed so they
 # deploy; the *.png rule above must not swallow them)
 !assets/**
+# …but keep OS junk out of the tracked assets tree
+assets/**/.DS_Store
 
 # Build output
 _site/

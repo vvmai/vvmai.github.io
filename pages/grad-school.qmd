@@ -79,7 +79,7 @@ The roots of A − B (opportunity cost) give us the breakeven point, if it exist
 ```{ojs}
 //| echo: false
 Plot.plot({
-  width: 820, height: 340, marginLeft: 55,
+  width: 820, height: 340, marginLeft: 55, grid: true,
   x: {label: "Years"}, y: {label: "Cumulative income (in $100k)"},
   marks: [
     Plot.lineY(xs.map((x, i) => ({x, y: cumA[i]})), {x: "x", y: "y", stroke: "#1f77b4"}),
