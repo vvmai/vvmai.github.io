@@ -152,10 +152,10 @@ From here, swap "tournament rules" for "contract rulebooks" and "standings" for 
 ## Strategy
 
 The expensive step -- carefully reading legal text, turning it into logical statements, checking them
-with the solver -- is spent only on promising candidates, identified first by cheap heuristics:
+with the solver -- is gated first by cheap heuristics:
 
 1. liquity check: is it actually being traded?
-2. encode terms into logical statements, then check the solver for USNATs
+2. encode terms into logical statements, then check the solver for UNSATs
 3. degrees-of-freedom-removed: score how much the added terms reduce the set of possible outcomes
 4. grow the set toward whatever imposes the strongest constraints, then check the solver again
 
@@ -170,6 +170,7 @@ discovery pays off (repeatability.)
 ## The golden case
 
 A few attributes have been identified to be necessary (but not sufficient) for a mispricing to be *tradeable*:
+
 1. The relationship must be logically forced by the legal terms
 2. **True no matter how the world turns out**; unintuitively, outcomes are not determined by the premise but by the fine print of the rulebooks. This is where bet resolution becomes debatable.
 3. **hidden across contracts**: visible only
@@ -177,18 +178,12 @@ by reading two or more together; ie the contradiction is not within itself (too 
 4. **contradicted by the actual tradeable prices** — with real volume on every leg at once
 5. Conditions about history, outside parallels, and the market consensus all collapse into one question: **does anyone already watch this relationship here?** If yes, it's priced. So the target is one *nobody* watches — which makes any such opportunity temporary.
 
-One rule decides the "true no matter what"
-condition: **a forced link survives when both contracts resolve on a yes/no event and
-breaks the moment either resolves on a continuous number. ** A continuous strike (a vote share, an inflation reading) makes the exact number the operative fact, so for some values the implication between two contracts simply fails. A yes/no fact (a law passed, a person appointed) is shared verbatim, so the implication holds automatically.
-
-## From rulebook to proof
-
 The fuzzy half (reading) and the provable half (checking) are kept strictly apart. For example, a real Fed contract reads:
 
 > "If the upper bound of the target federal funds rate … is greater than 5.25%
 > following the Fed's Mar 2026 meeting, then the market resolves Yes."
 
-The model's only job is to turn that sentence into a strutctured representation:
+The model's only job is to turn that sentence into a structured representation:
 
 ```json
 { "ticker": "KXFED-26MAR-T5.25",
@@ -235,41 +230,35 @@ number sits between the contracts.
 
 ### 1. Single contracts — dead 
 
-In a 20-contract sample, about half had a gap between headline and fine print; **none
-were tradeable** (each gap was harmless or already priced). Reading one contract is
-easy, so the edge is gone.
+Of ~20 contracts sampled, about half had a gap between headline and fine print; **none
+were tradeable** — each gap was harmless or already priced. Reading a single contract is
+cheap, so whatever edge lived there gets competed away fast; this sample didn't turn one up.
 
 ### 2. Economics & finance — effectively dead
 
-Nearly every economics/finance contract also trades elsewhere (rate futures, yields,
-official series), where professionals keep it priced — the **outside-copy killer**.
-Sorted by whether an outside copy exists, the catalog splits ~3,674 dead (Sports 2,221,
-Economics 572, Financials 568, Crypto 253, Commodities 60) against ~7,287 native to
-Kalshi. The fertile ground is the native side — **politics and legal events
-especially**, where one official ruling gets described across very different contracts
-and the link hides in the fine print.
+Nearly every economics/finance contract also trades elsewhere (rate futures, yields, official series), where professionals keep it tightly priced. The fertile ground is Kalshi-native bets — **politics and legal events especially**, where one official ruling gets described across different contracts under different premises, contexts, and audiences. If incoherence lives anywhere, I'd expect it here — a hypothesis about where to look, not a finding yet.
 
-### 3. Contracts about the exact same number — rare
+### 3. Sports — good structure, killed by other exchanges
 
-A 165-contract scan found essentially zero genuine matches on the *literal same
-measurement* across families; most apparent matches just cite the same news source.
-Expected — the real target is a definitional link between *different* measurements,
-which by construction won't show up in a search for identical ones.
+Sports has the best raw structure: one game spawns many linked yes/no bets. It's tempting
+to think such a huge, fan-driven crowd leaves easy logical gaps. 
 
-### 4. Sports — good structure, killed by other exchanges
+The *obvious* links: "win the championship" presupposes
+"reach the playoffs," so the championship bet must cost no more than the playoff bet. Every one of these bets also
+trades at a sportsbook, which keeps the whole set consistent, and that consistency flows
+back to Kalshi whoever is trading there.
 
-Sports has the best raw structure (many related yes/no bets on one game) and dodges
-the continuous-number trap — but every bet also exists at a sportsbook, which keeps
-the set priced.
+The *hidden* links fare no better here, for a subtler reason. A price mainly drifts when a bet is on
+an *unlikely* event: people reliably overpay for long-odds bets and don't bother correcting
+cheap ones. So a hidden mistake needs *both* bets to be unlikely. But sports links pair a
+*likely* event ("reach the playoffs") with an unlikely one ("win it all"), and the likely
+side is priced about right — so there's little to exploit.
 
-### 5. The life and death of a real arbitrage
+### 4. The life and death of a real arbitrage
 
-The strongest find pairs two contracts that look unrelated by their titles: a **parlay
-on who controls each chamber** (the four House×Senate combinations) and a **direct bet
-on which party controls the House**. Read together, the combos *partition* every
-outcome, and "Democrats control the House" is exactly two of them — so the direct
-contract must equal the DD-or-DR bundle. The solver proves that identity, then the real
-Kalshi prices go in:
+The strongest find pairs two contracts that look unrelated by their titles: a **parlay on who
+controls each chamber** (the four House×Senate combinations) and a **direct bet on which party
+controls the House**. Read together, the combos *partition* every outcome, and "Democrats control the House" is exactly two of them — so the direct contract must equal the DD-or-DR bundle. The solver proves that identity, then the real Kalshi prices go in:
 
 ```{python}
 #| echo: false
@@ -360,4 +349,75 @@ mispricing; none was large enough to clear the ~4.5¢ round-trip fee.
 (Verified live: the [Balance-of-Power combo legs](https://kalshi.com/markets/kxbalancepowercombo)
 and the "Democrats win the House" market are still open on Kalshi, now coherent.)
 
-**Conclusion:** can't quit my day job. YET!
+#### Another example
+
+**`KXRIEMANN` ⟹ `KXMILLENNIUM`.** Both resolve on the identical event — the Clay
+Mathematics Institute awarding a Millennium Prize — and the Riemann Hypothesis is one of
+those prizes, so "a prize for Riemann" forces "a prize for *some* Millennium problem."
+Two legs, one adjudicator. On the 2028 contracts the subset traded *above* the superset:
+bid(Riemann) 0.05 > ask(Millennium) 0.04 — a locked 1¢.
+
+```{python}
+#| echo: false
+import z3
+Riemann, Millennium = z3.Bools("Riemann Millennium")
+s = z3.Solver(); s.add(z3.Implies(Riemann, Millennium))    # Riemann is a Millennium problem
+s.push(); s.add(Riemann, z3.Not(Millennium))
+print("Riemann ⟹ Millennium :", "forced" if s.check() == z3.unsat else "not forced"); s.pop()
+
+bid_r, ask_m, depth = 0.05, 0.04, 32            # 2028 horizon; Millennium ask only 32 deep
+gross = (bid_r - ask_m) * 100
+fee = sum(0.07 * p * (1 - p) for p in (bid_r, ask_m)) * 100
+print(f"gross +{gross:.0f}¢/pair  −{fee:.1f}¢ fee  net {gross - fee:+.1f}¢   (clears the fee wall)")
+print(f"only {depth} contracts on offer  ->  ${depth * (gross - fee) / 100:.2f} total")
+```
+
+This one **cleared the fee wall**: at 4–5¢ a contract the per-trade fee is a few tenths of
+a cent, well under the 1¢ gap. And the mispriced leg is the *deep* one — "Riemann by 2028"
+is bid 5¢ behind **20,665 contracts**, a longshot overbid the depth did nothing to
+discipline. The *thin* leg is only the 32-contract Millennium hedge, which caps the
+**lockable** profit at ~$0.13 — not the size of the error.
+
+The Riemann contract opened June 23, 2026, and the subset has sat above the
+superset since its first hours. The gap (Riemann bid − Millennium ask) over its whole
+~36-hour life:
+
+```{python}
+#| echo: false
+import plotly.graph_objects as go, plotly.io as pio
+from datetime import datetime, timedelta
+pio.templates.default = "plotly"
+# Hourly gap = Riemann YES bid − Millennium YES ask (¢), Kalshi candle closes, forward-filled,
+# since the Riemann leg opened 2026-06-23 23:00 UTC.
+gaps = [0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1]
+start = datetime(2026, 6, 24, 0, 0)
+xs = [(start + timedelta(hours=i)).isoformat() for i in range(len(gaps))]
+pos = [g if g > 0 else None for g in gaps]
+fig = go.Figure()
+fig.add_hrect(y0=0, y1=1.4, fillcolor="#2ca02c", opacity=0.07, line_width=0,
+              annotation_text="arbitrage region (subset priced above superset)",
+              annotation_position="top left")
+fig.add_trace(go.Scatter(x=xs, y=gaps, mode="lines", line=dict(color="#9aa0a6", width=1.4),
+                         hovertemplate="%{x|%b %d %H:%M}: %{y:+d}¢<extra></extra>"))
+fig.add_trace(go.Scatter(x=xs, y=pos, mode="markers", marker=dict(color="#2ca02c", size=6),
+                         hovertemplate="%{x|%b %d %H:%M}: %{y:+d}¢<extra></extra>"))
+fig.add_hline(y=0, line_color="black", line_width=1)
+fig.add_annotation(x=xs[-1], y=1, text="still open", showarrow=True, arrowhead=2,
+                   ax=-45, ay=-26, font=dict(size=11))
+fig.update_layout(height=300, margin=dict(l=0, r=0, t=24, b=0), showlegend=False,
+                  yaxis_title="Riemann bid − Millennium ask (¢)", yaxis_range=[-1, 2])
+fig.update_xaxes(dtick=21600000, tickformat="%b %d<br>%H:%M")
+fig
+```
+
+Open for **33 of 40 hourly readings.** On Kalshi right now,
+the subset sits *above* the superset that contains it:
+
+::: {layout-ncol=2}
+![Riemann solved before 2028 — 6% / Yes 6¢ (market opened Jun 23, 2026).](/assets/images/neurosymbolic/riemann-2028.png)
+
+![*Any* Millennium prize before 2028 — 4.3% / Yes 4¢.](/assets/images/neurosymbolic/millennium-2028.png)
+:::
+
+**Conclusion:** can't quit my day job!
