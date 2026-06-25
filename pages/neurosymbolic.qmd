@@ -260,10 +260,7 @@ which by construction won't show up in a search for identical ones.
 
 Sports has the best raw structure (many related yes/no bets on one game) and dodges
 the continuous-number trap — but every bet also exists at a sportsbook, which keeps
-the set priced. *Sports is economics with a yes/no coat of paint.* No category has
-"native + hidden + recurring" all at once, so the target is a rare specific **pair** of
-contracts, not a whole category — which is why a targeted hand-search beats betting on
-a category.
+the set priced.
 
 ### 5. The life and death of a real arbitrage
 
@@ -363,4 +360,4 @@ mispricing; none was large enough to clear the ~4.5¢ round-trip fee.
 (Verified live: the [Balance-of-Power combo legs](https://kalshi.com/markets/kxbalancepowercombo)
 and the "Democrats win the House" market are still open on Kalshi, now coherent.)
 
-**Conclusion:** can't quit my day job.
+**Conclusion:** can't quit my day job. YET!
