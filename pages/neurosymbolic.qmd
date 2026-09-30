@@ -6,25 +6,23 @@ jupyter: brainvomit
 ## Thesis
 
 A prediction market sells **contracts** that pay \$1 if some speculatory thing happens and
-\$0 if it doesn't, so the price is the market's economic estimate of the probability. The
-known ways to make risk-free money here -- prices that don't add up, or the same bet
-going cheaper on another site -- get washed instantaneously once the megafunds
-arrive. As a bottomfeeder, I relinquished hope for a different kind of arbitrage altogether.
+\$0 if it doesn't, so the price acts as the market's economic estimate of the probability. The
+easy arbitrages here -- prices that don't add up, or the same bet
+going cheaper on another site -- have short lifespans and are captured by the fastest algorithms. As a bottomfeeder, I relinquished hope for a different kind of arbitrage altogether.
 
-Every contract has stated **terms**, the legal authority that decides who
+Every contract has stated **terms**, the legal agreement that decides who
 gets paid. The idea: have a language model read those terms and translate them into
 formal logic, then hand the logic (DSL) to an automated theorem-prover (SMT solver) that can
 prove when two+ contracts' prices contradict each other. A proven contradiction
-is a risk-free trade. The arbitrage, if found, lives within the fine print
-no one bothers to read.
+is a risk-free trade. Unlike easy arbitrages, these cannot be discovered without some sort of reasoning engine.
 
-Two things had to arrive together: **markets that trade yes/no claims** (so the logical couplings between contracts are boolean), and **cheap reading of dense legal text** (LLMs).
+Why now? My hypothesis is that 2 conditions had to be true for this type of arbitrage to exist: **being able to trade yes/no bets** (ie the logical couplings between bets are boolean), and **cheap reading of dense legal text** (LLMs).
 
 **Induction** learns patterns from data ("it went up the last ten times") — what
-essentially all quantitative trading does. **Deduction** proves something *must*
-follow from rules ("if one party controls the House, the Speaker is necessarily from
-that party"). Prediction markets are the first asset class where deductive incongruence is exploitable,
-because they trade boolean claims that are logically coupled.
+essentially all quantitative trading does. **Deduction** asserts that something *must*
+follow from a given truth ("if one party controls the House, the Speaker is necessarily from
+that party"). Prediction markets are the first asset class where deductive reasoning is exploitable,
+because they trade boolean claims that can be logically incoherent.
 
 There's also a reason we *must* stay with deduction: a market event happens once, and
 for a one-time event a single "true probability" is ill-defined. What *is* well-defined
@@ -102,15 +100,13 @@ print("\nCameroon eliminated even if it beats Brazil:",
 ```
 What isn't obvious from the score table:
 
-- **Brazil has clinched before its own match.** Serbia and Switzerland each
+- **Brazil clinches before its match.** Serbia and Switzerland each
   sit on 3 and could climb to 6, but they play *each other*, so at
-  most one gets there and the other is left behind. No set of results puts two teams
-  above Brazil, so it is through even if it loses to Cameroon.
+  MOST one gets there, leaving Brazil ahead even if it loses to Cameroon.
 - **Cameroon is eliminated even if it beats Brazil.** A win lifts it only to 3, and the
-  Serbia–Switzerland game always leaves two teams ahead — so its fate is sealed by a
-  match it isn't even in.
+  Serbia–Switzerland game leaves two teams ahead — so we see that Cameroon will lose either way.
 
-Both are facts the table doesn't show: the scheduling produces relationships that are forced yet non-obvious, and the solver just retrieves them. The same model can be used to answer another question: *what is the fewest points that guarantee qualification?*
+The same model can be used to answer another question: *what is the fewest points that guarantee qualification?*
 
 Rewind to just **after the first round** of group games: Brazil beat Cameroon, Serbia and Switzerland drew, and two rounds remain outstanding:
 
@@ -145,14 +141,14 @@ for t in teams:
     print(f"{t:12} clinches with {n} points  (can finish on {reachable(points, remaining, t)})")
 ```
 
-The surprise is Brazil's **6** — guaranteed through on six points even though Serbia *and* Switzerland can each still finish on **7, above it**. The escape is hidden in the schedule: the only way either chaser reaches 7 is to win out, and both of their run-ins include the match *against Brazil* — so Brazil reaching 6 means it has already beaten one of them, and the two can't both finish above it. Serbia and Switzerland, by contrast, must win out to their maximum of 7 to be safe; drop a single point and a tie for the second seat survives. Even Cameroon, beaten in its opener, isn't eliminated — it can still clinch, but only by taking all six from its two games.
+The non-obvious observation is that Brazil can cinch if it makes just **6** points, even though Serbia *and* Switzerland can each still come out to **7**. The only way either Serbia or Switzerland can reach 7 is to beat the other, and both of their run-ins include the match *against Brazil* — so Brazil reaching 6 means it has necessarily beaten one of them, and the two can't both finish above it. Serbia and Switzerland, by contrast, must win out to their maximum of 7 to be safe; else, they remain vulnerable to a tie. Even Cameroon, beaten in its opener, isn't eliminated — it can still clinch, but only by taking all six from its two games.
 
 From here, swap "tournament rules" for "contract rulebooks" and "standings" for "live prices."
 
 ## Strategy
 
-The expensive step -- carefully reading legal text, turning it into logical statements, checking them
-with the solver -- is gated first by cheap heuristics:
+The expensive step -- reading legal text, turning it into logical statements, checking them
+against the solver -- is gated first by cheap heuristics:
 
 1. liquity check: is it actually being traded?
 2. encode terms into logical statements, then check the solver for UNSATs
@@ -172,10 +168,10 @@ discovery pays off (repeatability.)
 A few attributes have been identified to be necessary (but not sufficient) for a mispricing to be *tradeable*:
 
 1. The relationship must be logically forced by the legal terms
-2. **True no matter how the world turns out**; unintuitively, outcomes are not determined by the premise but by the fine print of the rulebooks. This is where bet resolution becomes debatable.
+2. **True no matter how the world turns out**; unintuitively, outcomes are not determined by the premise but by the fine print of the rulebooks. This is where resolution becomes debatable.
 3. **hidden across contracts**: visible only
 by reading two or more together; ie the contradiction is not within itself (too obvious) but between two or more contracts
-4. **contradicted by the actual tradeable prices** — with real volume on every leg at once
+4. **contradicted by the actual tradeable prices** — with volume on every leg at once
 5. Conditions about history, outside parallels, and the market consensus all collapse into one question: **does anyone already watch this relationship here?** If yes, it's priced. So the target is one *nobody* watches — which makes any such opportunity temporary.
 
 The fuzzy half (reading) and the provable half (checking) are kept strictly apart. For example, a real Fed contract reads:
@@ -205,7 +201,7 @@ $$\textsf{UNSAT}\big(\;\text{axioms}\;\wedge\;\textstyle\bigwedge S\;\wedge\;\ne
 
 — no world consistent with the rulebooks makes the premises true and the claim false.
 
-**Real verdicts**, each a single solver call on a known-answer pair:
+**Found verdicts**:
 
 | Premise(s) → claim | Result | Meaning |
 | --- | --- | --- |
@@ -213,52 +209,20 @@ $$\textsf{UNSAT}\big(\;\text{axioms}\;\wedge\;\textstyle\bigwedge S\;\wedge\;\ne
 | *Mamdani wins NYC mayor* ∧ *Cuomo wins NYC mayor* | **UNSAT** | can't both hold (one winner) → P(A) + P(B) ≤ 1 |
 | *Trump renames the Gulf* → *a Trump appointee is held in contempt* | **SAT** | **not** proven — solver returns a world where the first holds, the second fails; topical overlap only |
 
-**UNSAT** is the prize: the statement is verifiably **true**, so any prices that break
-it are a locked mispricing. **SAT** is the trap-detector — it returns an explicit
-counterexample, exposing a "link" that was only topical (the independence trap that
-kills most naive matches).
+**UNSAT** is what we look for: the statement is verifiably **true**, so any prices that break
+it are a locked mispricing. 
 
-**UNKNOWN** is the third outcome, and it is informative. When a payout turns on *where a
-continuous number lands* — a threshold like `level > 5.25` that must be reconciled with
-another contract's `change == 0.25` — the implication can't be decided without extra
-axioms tying levels to changes, and the solver returns UNKNOWN. A yes/no event never
-does this. That gap is the [continuous-number trap](#the-golden-case) in its most
-literal form: the logic that holds for discrete events dissolves the moment a free real
-number sits between the contracts.
+**UNKNOWN** is also a possibility. When a payout depends on *a
+continuous number* — a threshold like `level > 5.25` must be reconciled with
+another contract's definition of `change == 0.25` — the implication can't be decided without extra
+axioms tying levels to changes, and the solver returns UNKNOWN. 
 
-## Findings
 
-### 1. Single contracts — dead 
+### The life and death of a real arbitrage
 
-Of ~20 contracts sampled, about half had a gap between headline and fine print; **none
-were tradeable** — each gap was harmless or already priced. Reading a single contract is
-cheap, so whatever edge lived there gets competed away fast; this sample didn't turn one up.
-
-### 2. Economics & finance — effectively dead
-
-Nearly every economics/finance contract also trades elsewhere (rate futures, yields, official series), where professionals keep it tightly priced. The fertile ground is Kalshi-native bets — **politics and legal events especially**, where one official ruling gets described across different contracts under different premises, contexts, and audiences. If incoherence lives anywhere, I'd expect it here — a hypothesis about where to look, not a finding yet.
-
-### 3. Sports — good structure, killed by other exchanges
-
-Sports has the best raw structure: one game spawns many linked yes/no bets. It's tempting
-to think such a huge, fan-driven crowd leaves easy logical gaps. 
-
-The *obvious* links: "win the championship" presupposes
-"reach the playoffs," so the championship bet must cost no more than the playoff bet. Every one of these bets also
-trades at a sportsbook, which keeps the whole set consistent, and that consistency flows
-back to Kalshi whoever is trading there.
-
-The *hidden* links fare no better here, for a subtler reason. A price mainly drifts when a bet is on
-an *unlikely* event: people reliably overpay for long-odds bets and don't bother correcting
-cheap ones. So a hidden mistake needs *both* bets to be unlikely. But sports links pair a
-*likely* event ("reach the playoffs") with an unlikely one ("win it all"), and the likely
-side is priced about right — so there's little to exploit.
-
-### 4. The life and death of a real arbitrage
-
-The strongest find pairs two contracts that look unrelated by their titles: a **parlay on who
-controls each chamber** (the four House×Senate combinations) and a **direct bet on which party
-controls the House**. Read together, the combos *partition* every outcome, and "Democrats control the House" is exactly two of them — so the direct contract must equal the DD-or-DR bundle. The solver proves that identity, then the real Kalshi prices go in:
+I actually did find a real arbitrage: **who
+controls each chamber** (the four House×Senate combinations) and **which party
+controls the House**. Read together, the direct contract must equal the DD-or-DR bundle. First, we use the solver to discover that identity, then we plug in the prices:
 
 ```{python}
 #| echo: false
@@ -281,15 +245,13 @@ print(f"bundle DD+DR = {p_DD + p_DR:.2f}   vs   direct bid {bid:.2f}   ->   {gap
 print(f"locked basket costs {cost:.2f}  ->  +{round((1 - cost) * 100)}¢ gross,  −{fee:.1f}¢ fees,  net {round((1 - cost) * 100) - fee:+.1f}¢")
 ```
 
-So the identity is **proven**; the legs are deeply liquid (real Kalshi open interest:
-\$4.1M / \$990k / \$930k, ~1¢ spreads); two different crowds trade the two framings — and
-there really was a 2¢ gap. It is the first concrete proof the target class is non-empty.
-It just doesn't pay: the per-leg fee (~4.5¢ over three legs) is larger than the gap.
-That's the general trap — a *liquid* mispricing is forced tiny, while a *large* one needs
-a leg so mispriced it's either untradeable (thin) or merely slow (a speed edge, not a
-logic edge). The profitable middle is squeezed shut.
+So the identity is **proven**; the legs are liquid (real Kalshi open interest:
+\$4.1M / \$990k / \$930k, ~1¢ spreads); two different crowds trade the two bets — and
+there really was a 2¢ gap.
 
-**Was it real, and how long did it last?** Pulling the three legs' full daily history
+But it doesn't pay out: the per-leg fee (~4.5¢ over three legs) is larger than the gap.
+
+Pulling the three legs' full daily history
 from Kalshi — since the combo legs began trading in December 2025 — and plotting the gap
 (direct bid − bundle ask) over its whole life:
 
@@ -334,27 +296,21 @@ fig
 ```
 
 For almost its entire life the gap sat **at or below zero** — the bundle was as cheap as
-or cheaper than the direct contract, exactly as coherence demands — drifting in a −1¢ to
-−4¢ band. It poked into arbitrage territory only in brief, shallow bursts: **eight short
-windows in six months, every one ≤ 2¢ and none lasting more than five days.** Most were a
-single 1¢ day; the two genuine 2¢ events were a lone spike on **Apr 1** (the direct
-contract jumped to 86¢ a day ahead of the bundle, gone the next day when the DD leg
-caught up) and the **Jun 19–23** run analysed above — which closed on Jun 24 when the
+or cheaper than the direct contract — drifting in a −1¢ to
+−4¢ band. It entered arbitrage territory only in brief bursts: **eight short
+windows in six months, each ≤ 2¢ and none lasting more than five days.** Most were a
+single 1¢ day; the two genuine 2¢ events were spikes on **Apr 1** and the **Jun 19–23** run analysed above — which closed on Jun 24 when the
 D-House/R-Senate leg repriced 36¢ → 38¢ and the bundle rose to meet the 78¢ bid.
 
-That is the thesis in one picture: a *liquid*, closely-watched relationship never lets
-incoherence grow past a couple of cents or survive a week. The June window wasn't
-special — just the longest of several sub-fee blips. Each was a real, provable
-mispricing; none was large enough to clear the ~4.5¢ round-trip fee.
 (Verified live: the [Balance-of-Power combo legs](https://kalshi.com/markets/kxbalancepowercombo)
-and the "Democrats win the House" market are still open on Kalshi, now coherent.)
+and the "Democrats win the House" market are still open on Kalshi)
 
 #### Another example
 
-**`KXRIEMANN` ⟹ `KXMILLENNIUM`.** Both resolve on the identical event — the Clay
-Mathematics Institute awarding a Millennium Prize — and the Riemann Hypothesis is one of
+**`KXRIEMANN` ⟹ `KXMILLENNIUM`.** The Clay
+Mathematics Institute awards a Millennium Prize, and the Riemann Hypothesis is one of
 those prizes, so "a prize for Riemann" forces "a prize for *some* Millennium problem."
-Two legs, one adjudicator. On the 2028 contracts the subset traded *above* the superset:
+On the 2028 contracts the subset traded *above* the superset:
 bid(Riemann) 0.05 > ask(Millennium) 0.04 — a locked 1¢.
 
 ```{python}
@@ -373,13 +329,12 @@ print(f"only {depth} contracts on offer  ->  ${depth * (gross - fee) / 100:.2f} 
 ```
 
 This one **cleared the fee wall**: at 4–5¢ a contract the per-trade fee is a few tenths of
-a cent, well under the 1¢ gap. And the mispriced leg is the *deep* one — "Riemann by 2028"
-is bid 5¢ behind **20,665 contracts**, a longshot overbid the depth did nothing to
-discipline. The *thin* leg is only the 32-contract Millennium hedge, which caps the
-**lockable** profit at ~$0.13 — not the size of the error.
+a cent. And the mispriced leg is the *deep* one — "Riemann by 2028"
+is bid 5¢ behind **20,665 contracts**. The *thin* leg is only the 32-contract Millennium hedge, which caps the
+**lockable** profit at ~$0.13. But hey that's an ROI of 115%!
 
 The Riemann contract opened June 23, 2026, and the subset has sat above the
-superset since its first hours. The gap (Riemann bid − Millennium ask) over its whole
+superset since the beginning. The gap (Riemann bid − Millennium ask) over its whole
 ~36-hour life:
 
 ```{python}
