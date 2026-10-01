@@ -631,3 +631,18 @@ a {
 .navbar .navbar-nav .nav-link,
 .navbar .quarto-navbar-tools a,
 .navbar .navbar-brand { color: $black; }
+
+// Wider docked sidebar (Quarto's `grid: sidebar-width` only sizes floating
+// sidebars). Same template Quarto emits for body.docked, page-start column
+// 120px -> 160px so long page titles don't wrap.
+@media (min-width: 992px) {
+  body.docked .page-columns {
+    grid-template-columns: [screen-start] 1.5em [screen-start-inset page-start] minmax(60px, 160px) [page-start-inset] 60px [body-start-outset] 60px [body-start] 1.5em [body-content-start] minmax(500px, calc(1000px - 3em)) [body-content-end] 1.5em [body-end] 50px [body-end-outset] minmax(50px, 100px) [page-end-inset] 50px [page-end] 5fr [screen-end-inset] 1.5em [screen-end];
+  }
+}
+
+// Table row flagged with a [..]{.gap-row} cell: grey cells, normal text.
+tr:has(.gap-row) > td {
+  --bs-table-bg-type: #{$gray-200};
+  background-color: $gray-200;
+}

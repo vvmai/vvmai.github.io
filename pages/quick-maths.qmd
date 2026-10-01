@@ -38,7 +38,7 @@ ${comment}`;
 
 ## Conscious lifespan vs. sleep tradeoff
 
-How much *waking* life you have left, and what each hour of sleep trades away.
+How many waking hours of life you have left as a function of how much you sleep each night.
 ```{ojs}
 //| echo: false
 viewof currentAge = Inputs.number({label: "Current age (yr)", min: 0, step: 1, value: 23})

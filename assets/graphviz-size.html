@@ -1,0 +1,14 @@
+<!-- Size each Graphviz ({dot}) SVG to its viewBox; Quarto forces 672x480,
+     which letterboxes wide/short graphs with blank space. -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".cell-output-display svg").forEach(svg => {
+    const vb = svg.viewBox.baseVal;
+    if (!vb || !vb.width) return;
+    svg.setAttribute("width", vb.width * 4 / 3);   // pt -> px
+    svg.setAttribute("height", vb.height * 4 / 3);
+    svg.style.maxWidth = "100%";
+    svg.style.height = "auto";
+  });
+});
+</script>

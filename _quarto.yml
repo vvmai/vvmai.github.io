@@ -21,8 +21,10 @@ website:
     left:
       - text: "About"
         href: index.qmd
-      - text: "Projects"
+      - text: "Case studies"
         href: pages/neurosymbolic.qmd
+      - text: "Blog"
+        href: pages/blobsim.qmd
     right:
       - icon: github
         href: https://github.com/vvmai
@@ -30,16 +32,26 @@ website:
       - icon: linkedin
         href: https://www.linkedin.com/in/vvmai
         aria-label: LinkedIn
+  # Case studies: problem -> solution -> results. Blog: open-ended explorations.
   sidebar:
-    - title: "Projects"
+    - id: case-studies
+      title: "Case studies"
       style: docked
       contents:
         - text: "Neurosymbolic solver for deductive trading"
           href: pages/neurosymbolic.qmd
-        - text: "Conway's blobs"
-          href: pages/blobsim.qmd
+        - text: "Graph-based entity resolution algorithm"
+          href: pages/entity-resolution.qmd
+        - text: "Designing a predictive model controller to optimize a pricing strategy"
+          href: pages/pricing-controller.qmd
         - text: "Plotting my next move"
           href: pages/nyc.qmd
+    - id: blog
+      title: "Blog"
+      style: docked
+      contents:
+        - text: "Conway's blobs"
+          href: pages/blobsim.qmd
         - text: "Puppy weight predictor"
           href: pages/puppy.qmd
         - text: "Quick maths"
@@ -53,6 +65,6 @@ format:
     toc: true
 
 execute:
-  # Heavy Python cells (NYC, blobsim) execute locally once; outputs cached in
+  # Pages re-execute locally when their source changes; outputs cached in
   # _freeze/ (committed) so CI deploys without geopandas/blobsim or the raw data.
-  freeze: true
+  freeze: auto

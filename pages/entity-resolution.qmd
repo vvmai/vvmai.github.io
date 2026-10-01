@@ -1,0 +1,131 @@
+---
+title: "Graph-based entity resolution algorithm"
+include-after-body: ../assets/graphviz-size.html
+---
+
+# Problem
+
+Have you ever wanted to track someone's (a person or company) aliases across different platforms using that platform's activity/transaction history? Haha me neither. But if you did, this is how you might go about it using a graph-based entity resolution algorithm I came up with while working on a totally different problem (for a friend.)
+
+Suppose you have access to a large dataset containing transaction records for various corporate entities, but the entity names are not standardized. For example, the same company might appear as "Acme Corp.", "Acme Corporation", or "ACME, Inc." Furthermore, some major corporations might have multiple subsidiaries, divisions, or shell companies each with entirely different names. Here, I'm defining a 'unique entity' when money comes out of effectively the same pocket, however their accountants want to hide it :) 
+
+There's an important feature of the data, which is that the commodities being traded are often uniquely identifiable. ie maybe they're trading racing horses, which are not fungible like corn or oil, so each transaction can be traced to a specific item. Furthermore, you can assume that the data is comprehensive at the asset level (ie all transactions involving each unique asset are recorded.)
+
+# The algorithm
+
+1. Iterate through the transaction records, append each transaction to a graph where nodes represent entities.
+
+```{dot}
+graph {
+  graph [fontname="Helvetica" bgcolor="transparent" pad=0.05 nodesep=0.5]
+  node  [fontname="Helvetica" fontsize=11 style=filled color="#000000" penwidth=2]
+  edge  [fontname="Helvetica" fontsize=10 color="#000000"]
+  node  [shape=circle fixedsize=true width=1.1 fillcolor="#a2e436"]
+  rankdir=LR
+  A [label="Company A"]
+  info [shape=plain fixedsize=false width=0 height=0 label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#ffffff" color="#000000"><tr><td bgcolor="#e9ecef"><b>node attributes</b></td></tr><tr><td align="left" bgcolor="#ffffff">name: Acme Corp.</td></tr><tr><td align="left" bgcolor="#ffffff">mailing address: 12 Main St, Lexington KY</td></tr><tr><td bgcolor="#e9ecef"><b>transaction history</b></td></tr><tr><td align="left" bgcolor="#ffffff">T4 | Mar 2022 | PURCHASE Horse #7</td></tr><tr><td align="left" bgcolor="#ffffff">T9 | May 2022 | PURCHASE Horse #4</td></tr><tr><td align="left" bgcolor="#ffffff">T12 | Jun 2023 | SALE Horse #7</td></tr><tr><td align="left" bgcolor="#ffffff">T13 | Aug 2023 | PURCHASE Horse #3</td></tr><tr><td align="left" bgcolor="#ffffff">T14 | Dec 2023 | SALE Horse #3</td></tr><tr><td align="left" bgcolor="#ffffff">T1 | Jan 2024 | PURCHASE Horse #1</td></tr></table>>]
+  A -- info [style=dashed]
+}
+```
+
+2. For each node, maintain a list of unique commodities purchased by that entity, the length of time each commodity was held, and the time of sale for each commodity. At this point, each entity is a node with an ordered list of assets held at any given time.
+
+```{dot}
+graph {
+  graph [fontname="Helvetica" bgcolor="transparent" pad=0.05 nodesep=0.5]
+  node  [fontname="Helvetica" fontsize=11 style=filled color="#000000" penwidth=2]
+  edge  [fontname="Helvetica" fontsize=10 color="#000000"]
+  node  [shape=circle fixedsize=true width=1.1 fillcolor="#a2e436"]
+  rankdir=LR
+  A [label="Company A"]
+  info [shape=plain fixedsize=false width=0 height=0 label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#ffffff" color="#000000"><tr><td bgcolor="#e9ecef"><b>node attributes</b></td></tr><tr><td align="left" bgcolor="#ffffff">name: Acme Corp.</td></tr><tr><td align="left" bgcolor="#ffffff">mailing address: 12 Main St, Lexington KY</td></tr><tr><td bgcolor="#e9ecef"><b>transaction history</b></td></tr><tr><td align="left" bgcolor="#ffffff">T4 | Mar 2022 | PURCHASE Horse #7</td></tr><tr><td align="left" bgcolor="#ffffff">T9 | May 2022 | PURCHASE Horse #4</td></tr><tr><td align="left" bgcolor="#ffffff">T12 | Jun 2023 | SALE Horse #7</td></tr><tr><td align="left" bgcolor="#ffffff">T13 | Aug 2023 | PURCHASE Horse #3</td></tr><tr><td align="left" bgcolor="#ffffff">T14 | Dec 2023 | SALE Horse #3</td></tr><tr><td align="left" bgcolor="#ffffff">T1 | Jan 2024 | PURCHASE Horse #1</td></tr><tr><td bgcolor="#22d2ed"><b>asset history</b></td></tr><tr><td align="left" bgcolor="#ffffff">Horse #7 | (Mar 2022, Jun 2023)</td></tr><tr><td align="left" bgcolor="#ffffff">Horse #4 | (May 2022, ?)</td></tr><tr><td align="left" bgcolor="#ffffff">Horse #3 | (Aug 2023, Dec 2023)</td></tr><tr><td align="left" bgcolor="#ffffff">Horse #1 | (Jan 2024, ?)</td></tr></table>>]
+  A -- info [style=dashed]
+}
+```
+
+3. To draw a link between entities, we compare their list of assets. If two entities have overlapping asset histories, we create an edge between them (ie the same asset cannot be held by two different entities at the same time. Therefore, these must be the same underlying entity).
+
+```{dot}
+graph {
+  graph [fontname="Helvetica" bgcolor="transparent" pad=0.05 nodesep=0.5]
+  node  [fontname="Helvetica" fontsize=11 style=filled color="#000000" penwidth=2]
+  edge  [fontname="Helvetica" fontsize=10 color="#000000"]
+  node  [shape=circle fixedsize=true width=1.1 fillcolor="#a2e436"]
+  ranksep=0.15 nodesep=1.6
+  E [shape=plain fixedsize=false width=0 height=0 label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#ffffff" color="#000000"><tr><td bgcolor="#ea4998"><b>edge (A, C)</b></td></tr><tr><td align="left" bgcolor="#ffffff">field: asset ID = Horse #1</td></tr><tr><td align="left" bgcolor="#ffffff">overlap: (Jan 2024, Feb 2024)</td></tr></table>>]
+  A [label="Company A"]
+  C [label="Company C"]
+  { rank=same; A; C }
+  E -- A [style=invis]
+  E -- C [style=invis]
+  A -- C [penwidth=3]
+}
+```
+
+Something like this might show up in the data as:
+
+| # | Date | Asset | Buyer | Seller |
+|---|---|---|---|---|
+| T1 | Jan 2024 | Horse #1 | Company A | Company B |
+| T2 | Feb 2024 | Horse #1 | Company D | Company C |
+
+If we assume the data is exhaustive at the commodity level (ie all transactions involving this specific racing horse are recorded), then it must be true that Company A == Company C. We use this transaction to draw an edge between Company A and Company C. This edge is saying: "race horse #1 was owned by company A and C simultaneously between January 2024 and February 2024."
+
+To disprove this, you would need to find a third transaction involving Racing Horse #1 between January 2024 and February 2024. If the buyer in that transaction is not recorded, then we can't definitively say that Company A and Company C are the same entity.
+
+| # | Date | Asset | Buyer | Seller |
+|---|---|---|---|---|
+| T1 | Jan 2024 | Horse #1 | Company A | Company B |
+| [T3]{.gap-row} | Jan–Feb 2024 | Horse #1 | ? | ? |
+| T2 | Feb 2024 | Horse #1 | Company D | Company C |
+
+Another way you can use this graph is to connect indirectly related entities. For example, if we know that Company A = Company C, and that Company C = Company D, then it must be true that Company A = Company D. This transitive property allows us to infer additional connections between entities that may not have directly overlapping asset histories.
+
+Suppose we construct a graph of all unique company names and the transactions that overlap in asset ownership. Each island in this graph represents a set of names connected via overlap in asset ownership. We can weigh these edges based on the number of overlapping assets/supporting evidence observed between the connected entities. ie having just 1 overlapping asset might be weak evidence, but having 10 overlapping assets across multiple transactions would be much stronger evidence that the connected entities are actually the same.
+
+```{dot}
+graph {
+  graph [fontname="Helvetica" bgcolor="transparent" pad=0.05 nodesep=0.5]
+  node  [fontname="Helvetica" fontsize=11 style=filled color="#000000" penwidth=2]
+  edge  [fontname="Helvetica" fontsize=10 color="#000000"]
+  node  [shape=circle fixedsize=true width=1.1 fillcolor="#a2e436"]
+  graph [rankdir=LR ranksep=0.9 nodesep=0.7 style=dashed color="#868e96" fontcolor="#868e96" fontsize=10]
+  A [label="Acme\nCorp."]
+  H [label="ACME\nHoldings LLC"]
+  B [label="Blue Ridge\nStables"]
+  F [label="Foxhall\nFarm"]
+  T [label="FH Equine\nTrust"]
+  O [label="Oak Lane\nLLC"]
+  subgraph cluster_1 { label="cluster 1" A H B }
+  subgraph cluster_2 { label="cluster 2" F T }
+  subgraph cluster_3 { label="cluster 3" O }
+  A -- H [penwidth=6 label="10"]
+  H -- B [penwidth=4.5 label="7"]
+  A -- B [penwidth=2.5 label="3"]
+  F -- T [penwidth=3 label="4"]
+  B -- F [penwidth=1 label="1" style=dashed]
+}
+```
+
+Where the edge weight is the number of overlapping assets.
+
+From here, we can use any fancy clustering algorithm or connectivity analysis to identify clusters. We can also look beyond asset identity -- for example, incorporating the entity's mailing address (if 2 different entities have the same mailing address, it could be considered in calculating edge weight), but this is less certain since addresses can change over time or be shared among multiple entities. 
+
+```{dot}
+graph {
+  graph [fontname="Helvetica" bgcolor="transparent" pad=0.05 nodesep=0.5]
+  node  [fontname="Helvetica" fontsize=11 style=filled color="#000000" penwidth=2]
+  edge  [fontname="Helvetica" fontsize=10 color="#000000"]
+  node  [shape=circle fixedsize=true width=1.1 fillcolor="#a2e436"]
+  ranksep=0.15 nodesep=1.6
+  E [shape=plain fixedsize=false width=0 height=0 label=<<table border="1" cellborder="0" cellspacing="0" cellpadding="4" bgcolor="#ffffff" color="#000000"><tr><td bgcolor="#ea4998"><b>edge (A, C)</b></td></tr><tr><td align="left" bgcolor="#22d2ed">asset ID = Horse #1 | overlap (Jan 2024, Feb 2024)</td></tr><tr><td align="left" bgcolor="#22d2ed">asset ID = Horse #4 | overlap (May 2022, Jul 2022)</td></tr><tr><td align="left"><font color="#868e96">mailing address = 12 Main St</font></td></tr></table>>]
+  A [label="Company A"]
+  C [label="Company C"]
+  { rank=same; A; C }
+  E -- A [style=invis]
+  E -- C [style=invis]
+  A -- C [penwidth=3]
+}
+```
+
+The benefit of this graph-based approach is that it allows us to discover new connections/aliases that cannot be detected through string matching alone. Using this algorithm on public deed records, for example, allowed me to discover aliases that major corporations used to hide their ownership/portfolio.

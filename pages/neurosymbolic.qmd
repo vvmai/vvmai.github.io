@@ -5,28 +5,26 @@ jupyter: brainvomit
 
 ## Thesis
 
-A prediction market sells **contracts** that pay \$1 if some speculatory thing happens and
-\$0 if it doesn't, so the price acts as the market's economic estimate of the probability. The
+Of late, I've been exploring gambling addiction by looking into prediction markets. Typically, a prediction market sells contracts that pay \$1 if some speculatory thing happens and
+\$0 if it doesn't. The price of a bet reflects the market's economic estimate of the probability of the event occuring. The
 easy arbitrages here -- prices that don't add up, or the same bet
-going cheaper on another site -- have short lifespans and are captured by the fastest algorithms. As a bottomfeeder, I relinquished hope for a different kind of arbitrage altogether.
+going at different prices on different platforms -- have short lifespans and are captured by the fastest algorithms. As a bottomfeeder, I relinquished hope for a different kind of arbitrage altogether.
 
-Every contract has stated **terms**, the legal agreement that decides who
-gets paid. The idea: have a language model read those terms and translate them into
-formal logic, then hand the logic (DSL) to an automated theorem-prover (SMT solver) that can
-prove when two+ contracts' prices contradict each other. A proven contradiction
+The idea: have a language model read each contract's terms and translate them into
+formal logic, then hand the logic (DSL) to a theorem-prover (like SMT solver) that can
+prove when prices contradict each other. A proven contradiction
 is a risk-free trade. Unlike easy arbitrages, these cannot be discovered without some sort of reasoning engine.
 
 Why now? My hypothesis is that 2 conditions had to be true for this type of arbitrage to exist: **being able to trade yes/no bets** (ie the logical couplings between bets are boolean), and **cheap reading of dense legal text** (LLMs).
 
-**Induction** learns patterns from data ("it went up the last ten times") — what
-essentially all quantitative trading does. **Deduction** asserts that something *must*
+**Induction** learns patterns from data ("it went up the last ten times") — which is typically that you find in HFT desks. **Deduction** asserts that something *must*
 follow from a given truth ("if one party controls the House, the Speaker is necessarily from
 that party"). Prediction markets are the first asset class where deductive reasoning is exploitable,
 because they trade boolean claims that can be logically incoherent.
 
-There's also a reason we *must* stay with deduction: a market event happens once, and
+There's also a reason we must stay with deduction: a market event happens once, and
 for a one-time event a single "true probability" is ill-defined. What *is* well-defined
-is **coherence** — whether a set of prices contradict each other right now.
+is logical coherence — whether a set of prices contradict each other right now.
 
 ## Example scenario
 
@@ -100,15 +98,15 @@ print("\nCameroon eliminated even if it beats Brazil:",
 ```
 What isn't obvious from the score table:
 
-- **Brazil clinches before its match.** Serbia and Switzerland each
-  sit on 3 and could climb to 6, but they play *each other*, so at
+- Brazil clinches before its match. Serbia and Switzerland each
+  sit on 3 and could climb to 6, but they play each other* so at
   MOST one gets there, leaving Brazil ahead even if it loses to Cameroon.
-- **Cameroon is eliminated even if it beats Brazil.** A win lifts it only to 3, and the
-  Serbia–Switzerland game leaves two teams ahead — so we see that Cameroon will lose either way.
+- In other words, Cameroon is eliminated even if it beats Brazil. A win brings it only to 3, and the
+  Serbia–Switzerland game leaves two teams ahead — so Cameroon will lose either way.
 
 The same model can be used to answer another question: *what is the fewest points that guarantee qualification?*
 
-Rewind to just **after the first round** of group games: Brazil beat Cameroon, Serbia and Switzerland drew, and two rounds remain outstanding:
+Rewind to just after the first round of group games: Brazil beat Cameroon, Serbia and Switzerland drew, and two rounds remain outstanding:
 
 | Team | Points | Played | Remaining matches |
 | --- | --- | --- | --- |
@@ -141,7 +139,7 @@ for t in teams:
     print(f"{t:12} clinches with {n} points  (can finish on {reachable(points, remaining, t)})")
 ```
 
-The non-obvious observation is that Brazil can cinch if it makes just **6** points, even though Serbia *and* Switzerland can each still come out to **7**. The only way either Serbia or Switzerland can reach 7 is to beat the other, and both of their run-ins include the match *against Brazil* — so Brazil reaching 6 means it has necessarily beaten one of them, and the two can't both finish above it. Serbia and Switzerland, by contrast, must win out to their maximum of 7 to be safe; else, they remain vulnerable to a tie. Even Cameroon, beaten in its opener, isn't eliminated — it can still clinch, but only by taking all six from its two games.
+The non-obvious observation is that Brazil can cinch if it makes just 6 points, even though Serbia *and* Switzerland can each still come out to 7. The only way either Serbia or Switzerland can reach 7 is to beat the other, and both of their run-ins include the match *against Brazil* — so Brazil reaching 6 means it has necessarily beaten one of them, and the two can't both finish above it. Serbia and Switzerland, by contrast, must win out to their maximum of 7 to be safe; else, they remain vulnerable to a tie. Even Cameroon, beaten in its opener, isn't eliminated — it can still clinch, but only by taking all six from its two games.
 
 From here, swap "tournament rules" for "contract rulebooks" and "standings" for "live prices."
 
@@ -165,14 +163,13 @@ discovery pays off (repeatability.)
 
 ## The golden case
 
-A few attributes have been identified to be necessary (but not sufficient) for a mispricing to be *tradeable*:
+A few attributes have been identified to be necessary (but not sufficient) for a mispricing to be tradeable:
 
 1. The relationship must be logically forced by the legal terms
-2. **True no matter how the world turns out**; unintuitively, outcomes are not determined by the premise but by the fine print of the rulebooks. This is where resolution becomes debatable.
-3. **hidden across contracts**: visible only
-by reading two or more together; ie the contradiction is not within itself (too obvious) but between two or more contracts
-4. **contradicted by the actual tradeable prices** — with volume on every leg at once
-5. Conditions about history, outside parallels, and the market consensus all collapse into one question: **does anyone already watch this relationship here?** If yes, it's priced. So the target is one *nobody* watches — which makes any such opportunity temporary.
+2. True no matter how the world turns out; unintuitively, outcomes are not determined by the premise but by the fine print. eg regardless of who actually wins the game, the teams that make it to the finals must necessarily make it to the finals.
+3. Hidden across contracts: visible only
+by reading two or more together; ie the contradiction is not within itself but between two or more contracts. The more hidden it is, the more likely it is to be overlooked by the market.
+4. Contradicted by the actual tradeable prices — with volume on every leg at once (liquidity check).
 
 The fuzzy half (reading) and the provable half (checking) are kept strictly apart. For example, a real Fed contract reads:
 
@@ -220,7 +217,7 @@ axioms tying levels to changes, and the solver returns UNKNOWN.
 
 ### The life and death of a real arbitrage
 
-I actually did find a real arbitrage: **who
+I actually did find a few real arbitrages: **who
 controls each chamber** (the four House×Senate combinations) and **which party
 controls the House**. Read together, the direct contract must equal the DD-or-DR bundle. First, we use the solver to discover that identity, then we plug in the prices:
 
