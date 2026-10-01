@@ -1,5 +1,6 @@
 ---
 title: "Plotting my next move"
+date: "2024-12-25T17:20"
 jupyter: brainvomit
 execute:
   echo: false

@@ -1,5 +1,6 @@
 ---
 title: "Conway's Blobs"
+date: "2026-06-23T15:44"
 jupyter: brainvomit
 execute:
   echo: false
@@ -17,7 +18,15 @@ Conway's Game of Life is a neat little experiment that exploded in popularity du
 
 From these simple rules, complex patterns and behaviors emerge over time, often in ways that are difficult to predict. You can go down a wikiPedia rabbit hole exploring all sorts of self-organizing structures that arise depending on the starting configuration and the specific rules applied, such as: puffers, spaceships, and blinkers.
 
-(gifs of puffers, spaceships, and blinkers)
+::: {layout-ncol=2}
+![**Blinker** -- an oscillator: flips between two states forever, period 2.](/assets/images/blobsim/gol_blinker.gif){width="120"}
+
+![**Glider** -- the smallest spaceship: reconstructs itself one cell diagonally every 4 steps, so it travels across the grid.](/assets/images/blobsim/gol_glider.gif){width="120"}
+:::
+
+![**Puffer** -- a moving pattern that leaves a trail of debris behind it.](/assets/images/blobsim/gol_puffer.gif)
+
+*Animations: Wikimedia Commons ([blinker](https://commons.wikimedia.org/wiki/File:Game_of_life_blinker.gif), [glider](https://commons.wikimedia.org/wiki/File:Game_of_life_animated_glider.gif), [puffer](https://commons.wikimedia.org/wiki/File:Stable_puffer_animation.gif)), public domain.*
 
 
 ## Design

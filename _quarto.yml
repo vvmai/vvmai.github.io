@@ -22,9 +22,9 @@ website:
       - text: "About"
         href: index.qmd
       - text: "Case studies"
-        href: pages/neurosymbolic.qmd
+        href: pages/case-studies.qmd
       - text: "Blog"
-        href: pages/blobsim.qmd
+        href: pages/blog.qmd
     right:
       - icon: github
         href: https://github.com/vvmai
@@ -38,26 +38,32 @@ website:
       title: "Case studies"
       style: docked
       contents:
-        - text: "Neurosymbolic solver for deductive trading"
-          href: pages/neurosymbolic.qmd
-        - text: "Graph-based entity resolution algorithm"
-          href: pages/entity-resolution.qmd
         - text: "Designing a predictive model controller to optimize a pricing strategy"
           href: pages/pricing-controller.qmd
-        - text: "Plotting my next move"
-          href: pages/nyc.qmd
+        - text: "Graph-based entity resolution algorithm"
+          href: pages/entity-resolution.qmd
+        - text: "Neurosymbolic solver for deductive trading"
+          href: pages/neurosymbolic.qmd
     - id: blog
       title: "Blog"
       style: docked
       contents:
-        - text: "Conway's blobs"
-          href: pages/blobsim.qmd
-        - text: "Puppy weight predictor"
-          href: pages/puppy.qmd
         - text: "Quick maths"
           href: pages/quick-maths.qmd
+        - text: "Conway's blobs"
+          href: pages/blobsim.qmd
+        - text: "Plotting my next move"
+          href: pages/nyc.qmd
         - text: "Is grad school worth it?"
           href: pages/grad-school.qmd
+        - text: "Puppy weight predictor"
+          href: pages/puppy.qmd
+
+# Page dates are created_at in US Eastern wall-clock time (no offset, so the
+# rendered time is the same on any machine/CI timezone).
+date-format: "MMMM D, YYYY h:mm A [ET]"
+language:
+  title-block-published: ""   # hide the "Published" heading above the date
 
 format:
   html:

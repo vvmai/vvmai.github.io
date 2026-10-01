@@ -1,5 +1,6 @@
 ---
 title: "Graph-based entity resolution algorithm"
+date: "2026-09-30T20:32"
 include-after-body: ../assets/graphviz-size.html
 ---
 

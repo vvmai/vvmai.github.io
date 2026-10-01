@@ -1,5 +1,6 @@
 ---
 title: "Is grad school worth it?"
+date: "2024-12-25T17:20"
 ---
 
 ## Short answer: maybe.

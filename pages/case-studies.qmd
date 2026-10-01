@@ -1,0 +1,6 @@
+---
+title: "Case studies"
+sidebar: case-studies
+---
+
+Specific problems I've solved, structured in problem → solution → outcome format.

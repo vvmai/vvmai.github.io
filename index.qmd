@@ -3,6 +3,6 @@ title: ""
 pagetitle: "About"
 ---
 
-![](/assets/photos/IMG_0830.jpg)
+![](/assets/photos/IMG_0830.jpg){width="300"}
 
 I'm a prolific producer of abandoned projects. This is my attempt to commit to at least some of them. Each page you see is a win against procrastination!

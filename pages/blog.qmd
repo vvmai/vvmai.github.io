@@ -1,0 +1,6 @@
+---
+title: "Blog"
+sidebar: blog
+---
+
+Random explorations and analyses no one asked for.

@@ -1,5 +1,6 @@
 ---
 title: "Neurosymbolic solver for deductive trading"
+date: "2026-06-23T15:52"
 jupyter: brainvomit
 ---
 
@@ -215,7 +216,7 @@ another contract's definition of `change == 0.25` — the implication can't be d
 axioms tying levels to changes, and the solver returns UNKNOWN. 
 
 
-### The life and death of a real arbitrage
+## Outcome
 
 I actually did find a few real arbitrages: **who
 controls each chamber** (the four House×Senate combinations) and **which party
@@ -302,7 +303,7 @@ D-House/R-Senate leg repriced 36¢ → 38¢ and the bundle rose to meet the 78¢
 (Verified live: the [Balance-of-Power combo legs](https://kalshi.com/markets/kxbalancepowercombo)
 and the "Democrats win the House" market are still open on Kalshi)
 
-#### Another example
+### Another example
 
 **`KXRIEMANN` ⟹ `KXMILLENNIUM`.** The Clay
 Mathematics Institute awards a Millennium Prize, and the Riemann Hypothesis is one of

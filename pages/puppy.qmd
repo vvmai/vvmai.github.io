@@ -1,5 +1,6 @@
 ---
 title: "Puppy weight calculator"
+date: "2024-12-25T17:20"
 ---
 
 # Estimating mixed puppies' adult weight

@@ -1,5 +1,6 @@
 ---
 title: "Quick maths"
+date: "2026-06-23T17:12"
 ---
 
 Essential calculations for everyday life
@@ -67,5 +68,44 @@ viewof sleepHours = Inputs.number({label: "Sleep per night (hr)", min: 0, max: 2
 **${conscious.toFixed(1)}** are spent awake.
 
 ${compared}`;
+}
+```
+
+## How many degrees of separation are we?
+
+How many friends-of-friends separate you from me, out of 8 billion people?
+
+```{ojs}
+//| echo: false
+viewof friendsClaimed = Inputs.number({
+  label: "How many friends do you have?",
+  min: 0, step: 1, placeholder: "0"
+})
+viewof friendsReal = Inputs.number({
+  label: "How many friends do you REALLY have?",
+  min: 0, step: 1, placeholder: "0"
+})
+```
+
+```{ojs}
+//| echo: false
+{
+  // friendsClaimed is deliberately unused.
+  if (friendsReal == null || Number.isNaN(friendsReal)) return md`*Enter your real friend count above.*`;
+  if (friendsReal < 1) return md`With no real friends, you are infinitely separated from everyone. Sorry.`;
+
+  // Random-network estimate: the circles around you (k friends) and me
+  // (myFriends) grow by (avgFriends − 1) new people per hop and meet once their
+  // sizes multiply to ~ N·avgFriends:  d ≈ 1 + ln(N·avg / (k·mine)) / ln(avg − 1).
+  const N = 8e9, avgFriends = 15, myFriends = 10;
+  const d = Math.max(1, 1 + Math.log(N * avgFriends / (friendsReal * myFriends)) / Math.log(avgFriends - 1));
+
+  return md`You are ~**${d.toFixed(1)}** degrees of separation from me.
+
+*Assuming that:*
+
+- *the average person has ~15 real friends that they actually talk to on a regular basis (totally made-up btw)*
+- *friendships are distributed randomly*
+- *there are ~8 billion people in the world*`;
 }
 ```
