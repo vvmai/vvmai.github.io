@@ -22,9 +22,9 @@ website:
       - text: "About"
         href: index.qmd
       - text: "Case studies"
-        href: pages/case-studies.qmd
+        href: pages/pricing-controller.qmd
       - text: "Blog"
-        href: pages/blog.qmd
+        href: pages/quick-maths.qmd
     right:
       - icon: github
         href: https://github.com/vvmai
