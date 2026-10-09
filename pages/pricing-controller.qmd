@@ -52,7 +52,7 @@ So $M$ has $k + 3$ inputs – the price, the $k$ engagement signals, days on mar
 
 The point-in-time estimate (as of today) of a sale probability is a point on a probability path over time: each day's value is the chance the item sells *that day, given it hasn't sold yet* – what survival analysis calls the **hazard**. Read in reverse, $M$ also says what engagement a listing should show on a given day if it is going to sell around a given day; e.g. on day 7, a listing on track to sell by day 14 should show engagement like the plot below. For example, we see that an item listed at price $r$ took 10 days to sell. Over the course of those 10 days, its engagement looks like this:
 
-![](https://vvmai.github.io/assets/images/pricing-controller/engagement_decay.png)
+![](/assets/images/pricing-controller/engagement_decay.png)
 
 *Engagement rate for a listing that sold on day 10, at one fixed price (illustrative).*
 
@@ -60,7 +60,7 @@ The lag from a signal to an actual purchase is several days, reflecting the time
 
 Think of it this way: if listings like this one sell after 10 days on average, and the chance of selling were the same every day, that chance would be about 1/10 per day. In practice it isn't the same every day, and that's exactly what the engagement curve tells us. So what does engagement look like for listings priced below or above market, or boosted by a promotion?
 
-![](https://vvmai.github.io/assets/images/pricing-controller/engagement_shapes.png)
+![](/assets/images/pricing-controller/engagement_shapes.png)
 
 *Three engagement shapes (illustrative): an underpriced item starts high and fades slowly, an overpriced item starts low and stays low, and a promoted item follows the same fading shape until a visibility boost briefly spikes it.*
 
@@ -110,13 +110,13 @@ Here's how a business would actually use this:
 
 1. **Fit $M$ on past listings.** Refit as new data comes in – sold or unsold, with unsold listings counted for the days they have been listed so far. The fitted $M$ tells you how long comparable listings usually take to sell when they are fairly priced – listed at fair market value (FMV), with typical engagement. That curve is below; it is the running product of each day's chance of *not* selling, $S(t) = \prod_{s \le t} \big(1 - P(s)\big)$:
 
-![](https://vvmai.github.io/assets/images/pricing-controller/step1_survival.png)
+![](/assets/images/pricing-controller/step1_survival.png)
 
 *Average share of listings still unsold, by days on market (illustrative).*
 
 2. **Pick a seed price on day 0.** The new listing has no engagement yet, so $\mathbf{e}(0)$ is empty and the forecast leans entirely on past listings of similar items. The seed is $r^*(0)$ from the same backward planning as every other day. Because the price can only go down, the seed is also the highest price the listing will ever have; a seed set too low cannot be corrected. The optimal seed typically lands near what comparable items have sold for, shifted up or down depending on how long those items took to sell relative to the carry cost.
 
-![](https://vvmai.github.io/assets/images/pricing-controller/step3_seed.png)
+![](/assets/images/pricing-controller/step3_seed.png)
 
 *Expected value of the listing on day 0 at each possible list price, assuming it is repriced optimally afterward; the peak is the seed price (illustrative).*
 
@@ -124,13 +124,13 @@ Here's how a business would actually use this:
 
    - **How the listing is doing:** compare the listing's running engagement rate with the rate for fairly priced comparables that were still on the market at the same number of days. If it's well below their normal range, the market is responding less than it does to items at FMV, and the forecast will move toward a lower best price. If it's on track, not having sold yet is fine: many fairly priced comparables only sell later (step 1).
 
-![](https://vvmai.github.io/assets/images/pricing-controller/step4_engagement.png)
+![](/assets/images/pricing-controller/step4_engagement.png)
 
 *One engagement signal (views per day, 3-day average) for this listing vs. fairly priced comparables at the same age; the line is their typical rate and the band their middle half. The small bumps are this listing reacting to its price drops, shown two plots down (illustrative).*
 
    - **Whether and how much to drop:** this is decided by the controller, not by the band alone. The drop is the gap between the current list price and $r^*(t)$.
 
-![](https://vvmai.github.io/assets/images/pricing-controller/step4_optimal.png)
+![](/assets/images/pricing-controller/step4_optimal.png)
 
 *Expected value of the listing at each candidate price, on three successive days; each dot is that day's optimal price $r^*(t)$ (illustrative).*
 
@@ -144,7 +144,7 @@ $$
 
    With $\lambda > 0$ this threshold is lower than the plain expected value, since an offer in hand carries no model uncertainty. As engagement fades, $W(t+1)$ shrinks, so the lowest acceptable price falls over time.
 
-![](https://vvmai.github.io/assets/images/pricing-controller/step5_offers.png)
+![](/assets/images/pricing-controller/step5_offers.png)
 
 *Expected path of the lowest acceptable price, if engagement keeps fading as forecast; offers above it are accepted (illustrative).*
 
