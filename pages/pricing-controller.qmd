@@ -5,25 +5,23 @@ date: 2026-09-30
 
 ## To drop or not to drop?
 
-If you've ever frequented eBay, Facebook marketplace, or even Craigslist, you've probably faced the dilemma of whether to drop the price of an item you're selling or hold out for a better offer. This decision can be tricky because dropping the price too soon might mean leaving money on the table, while holding out for too long incurs carrying cost. In this post, I'll explain how predictive modeling and simple maths can be used to determine the optimal timing and magnitude of price drops to maximize your expected proceeds, with a penalty for how uncertain that expectation is.
+If you've ever frequented eBay, Facebook marketplace, or even Craigslist, you've probably faced the dilemma of whether to drop the price of an item you're selling or hold out for a better offer. This decision can be tricky because dropping the price too soon might mean leaving money on the table, while holding out for too long incurs carrying cost. In this post, I'll explain how predictive modeling and simple maths can be used to determine the optimal pricing tactic to maximize your expected profit.
 
-This approach produces a dynamic pricing strategy that not only takes into account current market conditions, but also incorporates the market's response to your past pricing decisions to produce an optimized pricing path.
+## The two ingredients: a model and a controller
 
-## The two components: a model and a controller
-
-The first component is the predictive model, which forecasts how the market will respond to a specific price point. Market response is measured by engagement metrics, such as the number of views, clicks, inquiries, etc. received for the item at that price. The model, $M$, takes the list price and current engagement and predicts $T$, the number of days until the item sells.
+The first thing we need is the predictive model, which forecasts how the market will respond to a given price point. Market response is typically measured by some engagement metric, such as the number of views, clicks, inquiries, etc. received for the item at that price. The model, $M$, takes the list price and current engagement and predicts $T$, the number of days until the item sells.
 
 $$
 \underbrace{T}_{\text{days to sale}} \sim \underbrace{M}_{\text{fit to past listings}}\big(\underbrace{r}_{\text{price}},\ \underbrace{\mathbf{e}}_{\text{engagement}}\big)
 $$
 
-where $r$ is the price you list the item at, and $\mathbf{e}$ is the listing's recent engagement: views, clicks and inquiries per day over the last 3 days.
+where $r$ is the price you list the item at, and $\mathbf{e}$ is the listing's recent engagement.
 
-$M$ returns a distribution over $T$, not a single number. Its spread is $M$'s uncertainty about how the market will respond, and it is largest for prices and engagement patterns that past listings rarely covered. For now, use its mean, $\mathbb{E}[T \mid r, \mathbf{e}]$; the controller section below uses the spread.
+$M$'s spread is its uncertainty about how the market will respond, which is higher for prices and engagement patterns that have sparse training data. 
 
-The second component is the controller, which uses the predictions from $M$ to make pricing decisions. Think of the controller as a function that seeks to maximize proceeds net of costs. For example, if I'm in the business of selling refurbished electronics, leaving an item up on the market isn't free – it incurs carrying costs such as storage, listing fees, maintenance, depreciation, and the cost of capital tied up in the item. Suppose I bundle all of these costs into a single daily cost, $c_{\text{carry}}$; carrying the item for $T$ days costs $c_{\text{carry}} \times T$.
+The second part is the controller, which uses the predictions from $M$ to make pricing decisions. Think of the controller as an equality that balances expected revenue against expected carrying costs. For example, if I'm in the business of selling refurbished cars, leaving an item up on the market isn't free – it incurs carrying costs such as storage, listing fees, maintenance,  and depreciation. Suppose I bundle all of these costs into a single daily cost, $c_{\text{carry}}$; carrying the item for $T$ days costs $c_{\text{carry}} \times T$. This is the cost side of the equation, while the revenue side is simply the price $r$ at which the item is listed.
 
-Combining them: for a given price $r$, the expected (probability-weighted average) value $E$ of listing at that price and holding until it sells is:
+Combining them: for a given price $r$, the expected value $E$ of listing at that price and holding until it sells is:
 
 $$
 E(r, \mathbf{e}) =
@@ -32,17 +30,18 @@ E(r, \mathbf{e}) =
 \underbrace{c_{\text{carry}} \times \mathbb{E}[T \mid r, \mathbf{e}]}_{\text{expected carry until it sells}}
 $$
 
+Where the price when $E = 0$ is the breakeven point.
 A lower price gives up revenue (the discount loss) but shortens the expected wait (less carry). The controller picks the price that balances the two:
 
 $$
 r^* = \arg\max_r \; E(r, \mathbf{e})
 $$
 
-But this is not very useful yet. The formula is a one-shot decision: suppose I run it on any given day – it gives me the expected value as of that date. Suppose I check again the next day – now I have additional information about how the engagement changes over time, and I'd like to feed that into my model. i.e. with another day of data, I should be able to refine my estimate of the sale likelihood and expected value. The crux of the problem is that you receive new engagement data continuously, and your controller needs to adapt to this evolving state.
+But this is not very useful yet. A buyer typically does not buy a car the same day that they saw it. In addition, the likelihood of selling is a function of how many cumulative people engaged with the listing over time. ie the buyer can be any one of the previous viewers -- not just the most recent one. And the formula sets one price and holds it until the sale, so it can't use updated engagement data for the same listing. If the typical buyer takes 10 days from click to purchase, it doesn't make sense to drop the price immediately after a single day of low engagement. How can we capture the lagged, cumulative likelihood of a sale?
 
 ## Model
 
-This is where modeling the time component $t$ is necessary. Let $t$ denote the time since the item was listed, in days, and let $\tau$ denote the days since the price was last changed. The engagement $\mathbf{e}(t)$ is a function of time. To update the forecast daily, write the time-to-sale distribution one day at a time: $M$ gives the probability of a sale on day $t$, given that the item has not sold before day $t$:
+This is where modeling the time component $t$ is necessary. Let $t$ be the time since the item was listed, in days, and let $\tau$ be the days since the price was last changed. The engagement $\mathbf{e}(t)$ is a function of time. To update the forecast daily, draw the time-to-sale distribution each day: $M$ gives the probability of a sale on day $t$, given that the item has not sold before day $t$:
 
 $$
 P\big(r, \mathbf{e}(t), t, \tau\big)
@@ -50,71 +49,68 @@ $$
 
 So $M$ has $k + 3$ inputs – the price, the $k$ engagement signals, days on market, and days since the last price change.
 
-The point-in-time estimate (as of today) of a sale probability is a point on a probability path over time: each day's value is the chance the item sells *that day, given it hasn't sold yet* – what survival analysis calls the **hazard**. Read in reverse, $M$ also says what engagement a listing should show on a given day if it is going to sell around a given day; e.g. on day 7, a listing on track to sell by day 14 should show engagement like the plot below. For example, we see that an item listed at price $r$ took 10 days to sell. Over the course of those 10 days, its engagement looks like this:
+This is saying that the point-in-time estimate (as of today) of a sale probability is actually a point on the probability path over time, for the same list price: each day's value is the chance the item sells *that day, given it hasn't sold yet* (Flipping the question around: on day 7, a listing on track to sell by day 14 should show engagement like the plot below.) For example, we see that an item listed at price $r$ took 10 days to sell. Over the course of those 10 days, its engagement looks like this:
 
 ![](/assets/images/pricing-controller/engagement_decay.png)
 
 *Engagement rate for a listing that sold on day 10, at one fixed price (illustrative).*
 
-The lag from a signal to an actual purchase is several days, reflecting the time it takes for engagement to turn into a completed sale (as well as the conversion rate). i.e. the buyer liked the item on day 1, sent an inquiry on day 5, and finally made the purchase on day 10. Two things follow. First, today's chance of a sale depends on engagement from several days back, so $\mathbf{e}(t)$ carries lagged values, not just today's count. Second, a price drop takes several days to show up in sales, and its effect then levels off; $\tau$ is what lets $M$ represent that rise and leveling off. Deciding whether to hold or drop the price therefore needs a forecast of where engagement is heading. This is a survival analysis problem: model the time-to-sale distribution conditioned on the engagement observed up to that point.
+![](/assets/images/pricing-controller/engagement_cumulative.png)
 
-Think of it this way: if listings like this one sell after 10 days on average, and the chance of selling were the same every day, that chance would be about 1/10 per day. In practice it isn't the same every day, and that's exactly what the engagement curve tells us. So what does engagement look like for listings priced below or above market, or boosted by a promotion?
+*Cumulative engagement for the same listing: the running total of the rate above. It keeps rising after the daily rate peaks, since any earlier viewer can still turn into the buyer (illustrative).*
+
+A price drop takes several days to convert into sales, and its effect then levels off; $\tau$ is the input that lets $M$ represent the shape of that curve. Deciding whether to hold or drop the price therefore needs a forecast of where engagement is heading. This hints at some survival analysis shenanigans, where we need to model the time-to-sale distribution conditioned on the observed engagement up to that point.
+
+So what does engagement look like for listings priced below or above market?
 
 ![](/assets/images/pricing-controller/engagement_shapes.png)
 
-*Three engagement shapes (illustrative): an underpriced item starts high and fades slowly, an overpriced item starts low and stays low, and a promoted item follows the same fading shape until a visibility boost briefly spikes it.*
-
-Why bother with the survival framing at all? Suppose we used a plain "will it sell within 14 days?" classifier – we would immediately run into two problems. First, listings posted less than 14 days ago that haven't sold yet have no label. Drop them and you overestimate how sellable everything is, since the recent listings that already sold tend to be the ones that sell faster; count them as "not sold" and you underestimate, since some of them will still sell within their 14 days. Second, it can't produce the number that we need – the chance of selling *today, conditional on the fact that it hasn't sold in $t$ days*.
+*Three engagement shapes (illustrative): an underpriced item peaks high and stays above the others, an overpriced item starts low and stays low, and a promoted item follows the same decay shape until a promotion temporarily boosts engagement.*
 
 ## Controller
 
-The controller is the same trade-off between discount loss and carry as before, computed one day at a time, with three changes: the expected wait becomes the daily rate $P\big(r, \mathbf{e}(t), t, \tau\big)$; the price can change on any day while the item is unsold; and the price can only move down. Let $r_{t-1}$ be yesterday's list price, and let today's price be $r = r_{t-1} - x$, where $x \ge 0$ is today's drop. Let $W(t, r_{t-1})$ be what the unsold item is worth on day $t$: the money we expect to get for it from here on, minus the carrying costs:
+To account for $t$, the expected wait becomes the daily rate $P\big(r, \mathbf{e}(t), t, \tau\big)$, and "didn't sell today" doesn't mean "won't sell tomorrow" – the price can change on any day while the item is unsold. Let $W(t)$ be what the unsold item is worth on day $t$: the money we expect to get for it from here on, minus the carrying costs:
 
 $$
-W(t, r_{t-1}) = \max_{0 \,\le\, x \,\le\, x_{\max}} \Big[
+W(t) = \max_{r} \Big[
 \overbrace{P \cdot r}^{\text{sell today}}
 +
-\overbrace{\big(1 - P\big) \cdot \mathbb{E}\big[W(t+1, r)\big]}^{\text{don't sell, try again tomorrow}}
-- \underbrace{\lambda \, \sigma_P \, \big|\, r - \mathbb{E}[W(t+1, r)] \,\big|}_{\text{uncertainty penalty}}
+\overbrace{\big(1 - P\big) \cdot \mathbb{E}\big[W(t+1)\big]}^{\text{don't sell, try again tomorrow}}
+- \underbrace{\lambda \, \sigma_P \, \big|\, r - \mathbb{E}[W(t+1)] \,\big|}_{\text{uncertainty penalty}}
 \Big]
 - \underbrace{c_{\text{carry}}}_{\text{today's carry}}
 $$
 
 where $P$ is short for $M$'s estimate of $P\big(r, \mathbf{e}(t), t, \tau\big)$ and $\sigma_P$ is the standard deviation of that estimate. The terms:
 
-- **Uncertainty penalty.** Today's value can be rewritten as $\mathbb{E}[W(t+1)] + P \cdot \big(r - \mathbb{E}[W(t+1)]\big)$, so $M$'s uncertainty in $P$ turns into uncertainty in today's value with standard deviation $\sigma_P \cdot |r - \mathbb{E}[W(t+1)]|$. The weight $\lambda \ge 0$ sets how much expected value you will give up to avoid that uncertainty; $\lambda = 0$ is the plain expected-value controller. This steers the controller away from prices where $M$ has little data.
-- **Limits on drops.** $x_{\max}$ caps any single drop. $x \ge 0$ rules out price increases. There is no minimum price: lost revenue in the $P \cdot r$ term already makes each extra dollar of drop costly.
-- **Carry.** Every extra day costs $c_{\text{carry}}$, which lowers $W(t+1)$, the value of waiting, and makes lower prices that sell sooner more attractive, as in the one-shot formula.
+- **Uncertainty.** Today's value can be rewritten as $\mathbb{E}[W(t+1)] + P \cdot \big(r - \mathbb{E}[W(t+1)]\big)$, so $M$'s uncertainty in $P$ turns into uncertainty in today's value with standard deviation $\sigma_P \cdot |r - \mathbb{E}[W(t+1)]|$. The weight $\lambda \ge 0$ sets how much expected value you will give up to avoid that uncertainty; $\lambda = 0$ is the plain expected-value controller. This steers the controller away from prices where $M$ has little data.
+- **Carry.** Every extra day costs $c_{\text{carry}}$, which lowers $W(t+1)$, the value of waiting.
 
-On its own, carry lowers the best price but does not make it fall from day to day. The best price falls over time because the forecast hazard falls as engagement fades, which lowers the value of waiting further.
+The catch is that $W(t+1)$ depends on tomorrow's engagement $\mathbf{e}(t+1)$, which we haven't seen yet – hence the expectation $\mathbb{E}[\cdot]$ over the forecast. So each day, the controller:
 
-The catch is that $W(t+1, \cdot)$ depends on tomorrow's engagement $\mathbf{e}(t+1)$, which we haven't seen yet – hence the expectation $\mathbb{E}[\cdot]$ over the forecast. So each day, the controller:
-
-1. **Measures** the listing's current state $\mathbf{e}(t)$ – here, rolling 3-day rates like views per day. A rolling average is the simplest state estimator; a moving horizon estimator, which fits $M$ to the last $n$ days of observations and takes the fitted current state, uses more of the history and handles noisy days better.
-2. **Forecasts** engagement for the next $H$ days, assuming the listing keeps following the shape it's on (underpriced, overpriced or promoted, as in the plot above), and adjusting for the planned price.
-3. **Plans** backwards from the end of that horizon by applying the equation above one day at a time, back to today. At the end of the horizon, the item is valued with the one-shot formula: hold at the last planned price $r$ until it sells, $W(t+H, r) = r - c_{\text{carry}} \times \mathbb{E}[T \mid r, \mathbf{e}(t+H)]$.
+1. **Measures** the listing's current state $\mathbf{e}(t)$ using something like a rolling 3-day average. A moving horizon estimator, which fits $M$ to the last $n$ days of observations and takes the fitted current state, uses more of the history and handles noisy days better.
+2. **Forecasts** engagement for the next $H$ days and adjusting for the planned price.
+3. **Plans** backwards from the end of that horizon by applying the equation above back to today. At the end of the horizon, the item is valued with the case where carrying has no effect: set the best single price and hold it until it sells, $W(t+H) = \max_r \big[\, r - c_{\text{carry}} \times \mathbb{E}[T \mid r, \mathbf{e}(t+H)] \,\big]$, forever.
 4. **Acts** on today only: list the item at today's best price $r^*(t)$.
-5. **Repeats** tomorrow, with the engagement observed since today's decision.
+5. **Repeats** tomorrow, with the new engagement number from today.
 
-The daily carry and penalty terms are what control engineers call the stage (Lagrange) cost, and the one-shot value at the end of the horizon is the terminal (Mayer) cost. Planning several days ahead but committing only to today's price is the receding horizon at the core of *model predictive control* (MPC). The forecast will be wrong, but it gets corrected every day with real data.
-
-Because $\tau$ is an input to $M$, the controller does not need a separate rule for waiting after a drop. For the first few days after a drop $M$ expects the hazard to keep rising as the drop reaches buyers, so $\mathbb{E}[W(t+1)]$ stays high and the best choice is $x = 0$. A further drop becomes worthwhile only once the response to the previous one has leveled off and the listing is still unsold.
+The forecast will be wrong, but it gets corrected every day with real data, and it gets better as more signal comes in. 
 
 ## Intuitive visualization
 
-If you're an engineer, you might appreciate a more visual picture of how MPC works. It was developed for control systems in industrial processes such as chemical plants and refineries. A control system is a feedback loop that repeatedly measures the state of a system and adjusts its inputs to reach a desired outcome. For example, take three spinning discs connected by springs, with a motor attached to each outer disc. Knocked out of position, the discs oscillate for a long time before coming to rest on their own. The controller's job is to drive the motors so the discs come to rest quickly. At each time step it measures the disc angles, uses a model of the spring dynamics to predict where the discs will go under different motor inputs over the next several steps, applies only the first step of the best plan, and repeats. See the [do-mpc getting-started guide](https://www.do-mpc.com/en/latest/getting_started.html) for animations of this example.
+If you're a (real) engineer, you might appreciate a more visual representation. It was originally developed for control systems in industrial processes such as manufacturing. A control system is a feedback loop that repeatedly measures the state of a system and adjusts its inputs to reach a desired outcome. For example, you've built a machine whose single purpose is to stop three spinning discs, connected by springs, from oscillating. Left alone, the discs oscillate for a long time before coming to rest. The controller drives a motor on each outer disc: at each time step it measures the disc angles, uses a model of the spring dynamics to predict how much force to apply over the next several steps, applies only the first step of the best plan, and repeats. See [do-mpc getting-started guide](https://www.do-mpc.com/en/latest/getting_started.html) for animations of this example.
 
 ## Step by step
 
-Here's how a business would actually use this:
+Here's how you would actually use this:
 
-1. **Fit $M$ on past listings.** Refit as new data comes in – sold or unsold, with unsold listings counted for the days they have been listed so far. The fitted $M$ tells you how long comparable listings usually take to sell when they are fairly priced – listed at fair market value (FMV), with typical engagement. That curve is below; it is the running product of each day's chance of *not* selling, $S(t) = \prod_{s \le t} \big(1 - P(s)\big)$:
+1. **Fit $M$ on past listings.** Refit as new data comes in – sold or unsold, with unsold listings counted for the days they have been listed so far. The fitted $M$ tells you how long comparable listings usually take to sell when they are fairly priced. That curve is below; it multiplies up each day's chance of *not* selling, $S(t) = \prod_{s \le t} \big(1 - P(s)\big)$:
 
 ![](/assets/images/pricing-controller/step1_survival.png)
 
 *Average share of listings still unsold, by days on market (illustrative).*
 
-2. **Pick a seed price on day 0.** The new listing has no engagement yet, so $\mathbf{e}(0)$ is empty and the forecast leans entirely on past listings of similar items. The seed is $r^*(0)$ from the same backward planning as every other day. Because the price can only go down, the seed is also the highest price the listing will ever have; a seed set too low cannot be corrected. The optimal seed typically lands near what comparable items have sold for, shifted up or down depending on how long those items took to sell relative to the carry cost.
+2. **Pick a seed price on day 0.** Typically you start near what comparable items have sold for, maybe a little higher.
 
 ![](/assets/images/pricing-controller/step3_seed.png)
 
@@ -122,7 +118,7 @@ Here's how a business would actually use this:
 
 3. **Each morning, check the market feedback and reprice.**
 
-   - **How the listing is doing:** compare the listing's running engagement rate with the rate for fairly priced comparables that were still on the market at the same number of days. If it's well below their normal range, the market is responding less than it does to items at FMV, and the forecast will move toward a lower best price. If it's on track, not having sold yet is fine: many fairly priced comparables only sell later (step 1).
+   - **How the listing is doing:** compare the listing's running engagement rate with the rate for fairly priced comparables that were still on the market at the same number of days. If it's well below their normal range, the market is saying the price isn't what it usually responds to at fair market value (FMV), and the forecast will move toward a lower best price. If it's on track, not having sold yet is fine: many fairly priced comparables only sell later (step 1).
 
 ![](/assets/images/pricing-controller/step4_engagement.png)
 
@@ -132,20 +128,18 @@ Here's how a business would actually use this:
 
 ![](/assets/images/pricing-controller/step4_optimal.png)
 
-*Expected value of the listing at each candidate price, on three successive days; each dot is that day's optimal price $r^*(t)$ (illustrative).*
+*Expected value of the listing at each candidate price on day 0, day 4 and today; each dot is that day's optimal price $r^*(t)$. The flat line is today's value of waiting, which the curve approaches at prices too high to sell today (illustrative).*
 
-   On day 0 the gap is zero – the seed *is* the optimal price. Since prices never go up, the gap is either zero (hold) or a drop. As an unsold listing's engagement fades, the value of waiting shrinks and $r^*(t)$ drifts down; the further engagement falls behind the forecast, the bigger the drop, up to the cap $x_{\max}$. Right after a drop the controller usually holds for a few days while the drop's effect arrives.
-
-4. **Reject or accept offers.** Suppose a buyer offers $o$ at the end of day $t$, after the item has not sold at its list price that day. Compare selling now to keeping the item: selling gets you $o$, keeping is worth $\mathbb{E}[W(t+1, r_t)]$, which already nets out all future carry. So accept any offer at or above
+4. **Reject or accept offers.** If a buyer offers $o$ today, compare selling now to keeping the item: selling gets you $o$, keeping is worth $\mathbb{E}[W(t+1)]$. So accept any offer at or above
 
 $$
-r_{\min}(t) = \mathbb{E}\big[W(t+1, r_t)\big]
+r_{\min}(t) = \mathbb{E}\big[W(t+1)\big]
 $$
 
-   With $\lambda > 0$ this threshold is lower than the plain expected value, since an offer in hand carries no model uncertainty. As engagement fades, $W(t+1)$ shrinks, so the lowest acceptable price falls over time.
+   With $\lambda > 0$ this threshold is lower than the expected value, since an offer has the benefit of zero uncertainty (except not really). As engagement fades, $W(t+1)$ shrinks, so the lowest acceptable price falls over time.
 
 ![](/assets/images/pricing-controller/step5_offers.png)
 
 *Expected path of the lowest acceptable price, if engagement keeps fading as forecast; offers above it are accepted (illustrative).*
 
-   If you're reading this plot carefully, you might notice that it's saying something that sounds unintuitive at first: suppose the line sits at \$500 on day 5 and \$400 on day 10. On day 5 you should turn down a \$400 offer – and on day 10 you should take that exact same \$400. Shouldn't you have accepted the \$400 earlier? No. On day 5, $M$ still gave the listing a good chance of selling above \$500 in the coming days, enough that holding was worth \$500 after carry. Each unsold day after that removes some of those chances and adds a day of carry, and the forecast hazard falls as engagement fades, so by day 10 holding is worth only \$400. If engagement falls below the forecast, the line drops faster than the plot shows.
+   If you're reading this plot correctly, you might notice that it's saying something that sounds unintuitive at first: suppose the line sits at \$500 on day 5 and \$400 on day 10. On day 5 you should turn down a \$400 offer – and on day 10 you should take that exact same \$400. Shouldn't you have accepted the \$400 earlier? No. On day 5, holding out was worth \$500 in *expectation*. Each unsold day adds a day of carry, and the forecast hazard falls as engagement fades, so by day 10, \$400 is as good as holding.
